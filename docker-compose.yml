@@ -8,7 +8,7 @@ services:
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-unilex}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-unilex123}
-      POSTGRES_DB: ${POSTGRES_DB:-unilexdb}
+      POSTGRES_DB: ${POSTGRES_DB:-unilex}
     ports:
       - "5432:5432"
     volumes:
