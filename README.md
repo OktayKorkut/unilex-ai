@@ -81,6 +81,7 @@ Ardından `backend/.env` dosyasını aç ve şu alanları doldur:
 ```
 OPENAI_API_KEY=sk-...         # OpenAI API anahtarın
 SECRET_KEY=...                # Rastgele güçlü bir string (aşağıdaki komutla üretebilirsin)
+DATABASE_URL=postgresql://unilex:unilex123@postgres:5432/unilex 
 ```
 
 `SECRET_KEY` üretmek için terminalde:
@@ -91,7 +92,7 @@ openssl rand -hex 32
 ### 3. Docker ile Başlat
 
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
 İlk çalıştırmada biraz uzun sürebilir (image'lar indirilir, Playwright kurulur).
@@ -147,7 +148,7 @@ curl -X POST http://localhost:8000/api/v1/auth/login \
 
 ## Katkıda Bulunma
 
-Başlamadan önce `docker-compose up` ile ortamın ayakta olduğundan emin ol, değişikliklerini kendi branch'ine push'la.
+Başlamadan önce `docker compose up` ile ortamın ayakta olduğundan emin ol, değişikliklerini kendi branch'ine push'la.
 
 ```bash
 git checkout -b feature/yaptığın-şey
