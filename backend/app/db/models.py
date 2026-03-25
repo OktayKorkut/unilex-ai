@@ -12,7 +12,9 @@ class User(Base):
     hashed_password: Mapped[str] = mapped_column(String(255))
     full_name: Mapped[str] = mapped_column(String(255))
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    university_id: Mapped[int | None] = mapped_column(ForeignKey("universities.id"), nullable=True)
 
+    university: Mapped["University"] = relationship("University")
     sessions: Mapped[list["ChatSession"]] = relationship(back_populates="user")
 
 

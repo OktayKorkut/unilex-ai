@@ -1,0 +1,542 @@
+﻿docker :   File "/usr/local/l
+ib/python3.11/site-packages/s
+tarlette/routing.py", line 28
+8, in handle
+At line:1 char:1
++ docker logs --tail 200 unil
+ex_backend 2>&1 | Out-File er
+rors.txt -Enc ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~
+    + CategoryInfo           
+   : NotSpecified: (  File   
+  "/usr/lo... 288, in hand   
+ le:String) [], RemoteExc    
+eption
+    + FullyQualifiedErrorId  
+   : NativeCommandError
+ 
+    await self.app(scope, rec
+eive, send)
+  File "/usr/local/lib/python
+3.11/site-packages/starlette/
+routing.py", line 76, in app
+    await wrap_app_handling_e
+xceptions(app, request)(scope
+, receive, send)
+  File "/usr/local/lib/python
+3.11/site-packages/starlette/
+_exception_handler.py", line 
+62, in wrapped_app
+    raise exc
+  File "/usr/local/lib/python
+3.11/site-packages/starlette/
+_exception_handler.py", line 
+51, in wrapped_app
+    await app(scope, receive,
+ sender)
+  File "/usr/local/lib/python
+3.11/site-packages/starlette/
+routing.py", line 73, in app
+    response = await f(reques
+t)
+               ^^^^^^^^^^^^^^
+^^
+  File "/usr/local/lib/python
+3.11/site-packages/fastapi/ro
+uting.py", line 301, in app
+    raw_response = await run_
+endpoint_function(
+                   ^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python
+3.11/site-packages/fastapi/ro
+uting.py", line 214, in run_e
+ndpoint_function
+    return await run_in_threa
+dpool(dependant.call, **value
+s)
+           ^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^
+  File "/usr/local/lib/python
+3.11/site-packages/starlette/
+concurrency.py", line 39, in 
+run_in_threadpool
+    return await anyio.to_thr
+ead.run_sync(func, *args)
+           ^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python
+3.11/site-packages/anyio/to_t
+hread.py", line 63, in run_sy
+nc
+    return await get_async_ba
+ckend().run_sync_in_worker_th
+read(
+           ^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^
+  File "/usr/local/lib/python
+3.11/site-packages/anyio/_bac
+kends/_asyncio.py", line 2502
+, in run_sync_in_worker_threa
+d
+    return await future
+           ^^^^^^^^^^^^
+  File "/usr/local/lib/python
+3.11/site-packages/anyio/_bac
+kends/_asyncio.py", line 986,
+ in run
+    result = context.run(func
+, *args)
+             ^^^^^^^^^^^^^^^^
+^^^^^^^^
+  File "/app/app/api/routers/
+auth.py", line 33, in registe
+r
+    hashed_password=hash_pass
+word(body.password),
+                    ^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^
+  File "/app/app/core/securit
+y.py", line 10, in hash_passw
+ord
+    return pwd_context.hash(p
+assword)
+           ^^^^^^^^^^^^^^^^^^
+^^^^^^^^
+  File "/usr/local/lib/python
+3.11/site-packages/passlib/co
+ntext.py", line 2258, in hash
+    return record.hash(secret
+, **kwds)
+           ^^^^^^^^^^^^^^^^^^
+^^^^^^^^^
+  File "/usr/local/lib/python
+3.11/site-packages/passlib/ut
+ils/handlers.py", line 779, i
+n hash
+    self.checksum = self._cal
+c_checksum(secret)
+                    ^^^^^^^^^
+^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python
+3.11/site-packages/passlib/ha
+ndlers/bcrypt.py", line 591, 
+in _calc_checksum
+    self._stub_requires_backe
+nd()
+  File "/usr/local/lib/python
+3.11/site-packages/passlib/ut
+ils/handlers.py", line 2254, 
+in _stub_requires_backend
+    cls.set_backend()
+  File "/usr/local/lib/python
+3.11/site-packages/passlib/ut
+ils/handlers.py", line 2156, 
+in set_backend
+    return owner.set_backend(
+name, dryrun=dryrun)
+           ^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python
+3.11/site-packages/passlib/ut
+ils/handlers.py", line 2163, 
+in set_backend
+    return cls.set_backend(na
+me, dryrun=dryrun)
+           ^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python
+3.11/site-packages/passlib/ut
+ils/handlers.py", line 2188, 
+in set_backend
+    cls._set_backend(name, dr
+yrun)
+  File "/usr/local/lib/python
+3.11/site-packages/passlib/ut
+ils/handlers.py", line 2311, 
+in _set_backend
+    super(SubclassBackendMixi
+n, cls)._set_backend(name, dr
+yrun)
+  File "/usr/local/lib/python
+3.11/site-packages/passlib/ut
+ils/handlers.py", line 2224, 
+in _set_backend
+    ok = loader(**kwds)
+         ^^^^^^^^^^^^^^
+  File "/usr/local/lib/python
+3.11/site-packages/passlib/ha
+ndlers/bcrypt.py", line 626, 
+in _load_backend_mixin
+    return mixin_cls._finaliz
+e_backend_mixin(name, dryrun)
+           ^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python
+3.11/site-packages/passlib/ha
+ndlers/bcrypt.py", line 421, 
+in _finalize_backend_mixin
+    if detect_wrap_bug(IDENT_
+2A):
+       ^^^^^^^^^^^^^^^^^^^^^^
+^^^
+  File "/usr/local/lib/python
+3.11/site-packages/passlib/ha
+ndlers/bcrypt.py", line 380, 
+in detect_wrap_bug
+    if verify(secret, bug_has
+h):
+       ^^^^^^^^^^^^^^^^^^^^^^
+^^
+  File "/usr/local/lib/python
+3.11/site-packages/passlib/ut
+ils/handlers.py", line 792, i
+n verify
+    return consteq(self._calc
+_checksum(secret), chk)
+                   ^^^^^^^^^^
+^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python
+3.11/site-packages/passlib/ha
+ndlers/bcrypt.py", line 655, 
+in _calc_checksum
+    hash = _bcrypt.hashpw(sec
+ret, config)
+           ^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^
+ValueError: password cannot b
+e longer than 72 bytes, trunc
+ate manually if necessary (e.
+g. my_password[:72])
+(trapped) error reading bcryp
+t version
+Traceback (most recent call l
+ast):
+  File "/usr/local/lib/python
+3.11/site-packages/passlib/ha
+ndlers/bcrypt.py", line 620, 
+in _load_backend_mixin
+    version = _bcrypt.__about
+__.__version__
+              ^^^^^^^^^^^^^^^
+^^
+AttributeError: module 'bcryp
+t' has no attribute '__about_
+_'
+INFO:     172.20.0.1:52658 - "POST /api/v1/auth/register HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI a
+pplication
+Traceback (most recent call l
+ast):
+  File "/usr/local/lib/python
+3.11/site-packages/uvicorn/pr
+otocols/http/httptools_impl.p
+y", line 399, in run_asgi
+    result = await app(  # ty
+pe: ignore[func-returns-value
+]
+             ^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^
+  File "/usr/local/lib/python
+3.11/site-packages/uvicorn/mi
+ddleware/proxy_headers.py", l
+ine 70, in __call__
+    return await self.app(sco
+pe, receive, send)
+           ^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python
+3.11/site-packages/fastapi/ap
+plications.py", line 1054, in
+ __call__
+    await super().__call__(sc
+ope, receive, send)
+  File "/usr/local/lib/python
+3.11/site-packages/starlette/
+applications.py", line 113, i
+n __call__
+    await self.middleware_sta
+ck(scope, receive, send)
+  File "/usr/local/lib/python
+3.11/site-packages/starlette/
+middleware/errors.py", line 1
+87, in __call__
+    raise exc
+  File "/usr/local/lib/python
+3.11/site-packages/starlette/
+middleware/errors.py", line 1
+65, in __call__
+    await self.app(scope, rec
+eive, _send)
+  File "/usr/local/lib/python
+3.11/site-packages/starlette/
+middleware/cors.py", line 93,
+ in __call__
+    await self.simple_respons
+e(scope, receive, send, reque
+st_headers=headers)
+  File "/usr/local/lib/python
+3.11/site-packages/starlette/
+middleware/cors.py", line 144
+, in simple_response
+    await self.app(scope, rec
+eive, send)
+  File "/usr/local/lib/python
+3.11/site-packages/starlette/
+middleware/exceptions.py", li
+ne 62, in __call__
+    await wrap_app_handling_e
+xceptions(self.app, conn)(sco
+pe, receive, send)
+  File "/usr/local/lib/python
+3.11/site-packages/starlette/
+_exception_handler.py", line 
+62, in wrapped_app
+    raise exc
+  File "/usr/local/lib/python
+3.11/site-packages/starlette/
+_exception_handler.py", line 
+51, in wrapped_app
+    await app(scope, receive,
+ sender)
+  File "/usr/local/lib/python
+3.11/site-packages/starlette/
+routing.py", line 715, in __c
+all__
+    await self.middleware_sta
+ck(scope, receive, send)
+  File "/usr/local/lib/python
+3.11/site-packages/starlette/
+routing.py", line 735, in app
+    await route.handle(scope,
+ receive, send)
+  File "/usr/local/lib/python
+3.11/site-packages/starlette/
+routing.py", line 288, in han
+dle
+    await self.app(scope, rec
+eive, send)
+  File "/usr/local/lib/python
+3.11/site-packages/starlette/
+routing.py", line 76, in app
+    await wrap_app_handling_e
+xceptions(app, request)(scope
+, receive, send)
+  File "/usr/local/lib/python
+3.11/site-packages/starlette/
+_exception_handler.py", line 
+62, in wrapped_app
+    raise exc
+  File "/usr/local/lib/python
+3.11/site-packages/starlette/
+_exception_handler.py", line 
+51, in wrapped_app
+    await app(scope, receive,
+ sender)
+  File "/usr/local/lib/python
+3.11/site-packages/starlette/
+routing.py", line 73, in app
+    response = await f(reques
+t)
+               ^^^^^^^^^^^^^^
+^^
+  File "/usr/local/lib/python
+3.11/site-packages/fastapi/ro
+uting.py", line 301, in app
+    raw_response = await run_
+endpoint_function(
+                   ^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python
+3.11/site-packages/fastapi/ro
+uting.py", line 214, in run_e
+ndpoint_function
+    return await run_in_threa
+dpool(dependant.call, **value
+s)
+           ^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^
+  File "/usr/local/lib/python
+3.11/site-packages/starlette/
+concurrency.py", line 39, in 
+run_in_threadpool
+    return await anyio.to_thr
+ead.run_sync(func, *args)
+INFO:     172.20.0.1:59398 - "GET /health HTTP/1.1" 200 OK
+INFO:     172.20.0.1:59398 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     172.20.0.1:59414 - "GET /docs HTTP/1.1" 200 OK
+INFO:     172.20.0.1:59414 - "GET /openapi.json HTTP/1.1" 200 OK
+           ^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python
+3.11/site-packages/anyio/to_t
+hread.py", line 63, in run_sy
+nc
+    return await get_async_ba
+ckend().run_sync_in_worker_th
+read(
+           ^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^
+  File "/usr/local/lib/python
+3.11/site-packages/anyio/_bac
+kends/_asyncio.py", line 2502
+, in run_sync_in_worker_threa
+d
+    return await future
+           ^^^^^^^^^^^^
+  File "/usr/local/lib/python
+3.11/site-packages/anyio/_bac
+kends/_asyncio.py", line 986,
+ in run
+    result = context.run(func
+, *args)
+             ^^^^^^^^^^^^^^^^
+^^^^^^^^
+  File "/app/app/api/routers/
+auth.py", line 33, in registe
+r
+    hashed_password=hash_pass
+word(body.password),
+                    ^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^
+  File "/app/app/core/securit
+y.py", line 10, in hash_passw
+ord
+    return pwd_context.hash(p
+assword)
+           ^^^^^^^^^^^^^^^^^^
+^^^^^^^^
+  File "/usr/local/lib/python
+3.11/site-packages/passlib/co
+ntext.py", line 2258, in hash
+    return record.hash(secret
+, **kwds)
+           ^^^^^^^^^^^^^^^^^^
+^^^^^^^^^
+  File "/usr/local/lib/python
+3.11/site-packages/passlib/ut
+ils/handlers.py", line 779, i
+n hash
+    self.checksum = self._cal
+c_checksum(secret)
+                    ^^^^^^^^^
+^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python
+3.11/site-packages/passlib/ha
+ndlers/bcrypt.py", line 591, 
+in _calc_checksum
+    self._stub_requires_backe
+nd()
+  File "/usr/local/lib/python
+3.11/site-packages/passlib/ut
+ils/handlers.py", line 2254, 
+in _stub_requires_backend
+    cls.set_backend()
+  File "/usr/local/lib/python
+3.11/site-packages/passlib/ut
+ils/handlers.py", line 2156, 
+in set_backend
+    return owner.set_backend(
+name, dryrun=dryrun)
+           ^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python
+3.11/site-packages/passlib/ut
+ils/handlers.py", line 2163, 
+in set_backend
+    return cls.set_backend(na
+me, dryrun=dryrun)
+           ^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python
+3.11/site-packages/passlib/ut
+ils/handlers.py", line 2188, 
+in set_backend
+    cls._set_backend(name, dr
+yrun)
+  File "/usr/local/lib/python
+3.11/site-packages/passlib/ut
+ils/handlers.py", line 2311, 
+in _set_backend
+    super(SubclassBackendMixi
+n, cls)._set_backend(name, dr
+yrun)
+  File "/usr/local/lib/python
+3.11/site-packages/passlib/ut
+ils/handlers.py", line 2224, 
+in _set_backend
+    ok = loader(**kwds)
+         ^^^^^^^^^^^^^^
+  File "/usr/local/lib/python
+3.11/site-packages/passlib/ha
+ndlers/bcrypt.py", line 626, 
+in _load_backend_mixin
+    return mixin_cls._finaliz
+e_backend_mixin(name, dryrun)
+           ^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python
+3.11/site-packages/passlib/ha
+ndlers/bcrypt.py", line 421, 
+in _finalize_backend_mixin
+    if detect_wrap_bug(IDENT_
+2A):
+       ^^^^^^^^^^^^^^^^^^^^^^
+^^^
+  File "/usr/local/lib/python
+3.11/site-packages/passlib/ha
+ndlers/bcrypt.py", line 380, 
+in detect_wrap_bug
+    if verify(secret, bug_has
+h):
+       ^^^^^^^^^^^^^^^^^^^^^^
+^^
+  File "/usr/local/lib/python
+3.11/site-packages/passlib/ut
+ils/handlers.py", line 792, i
+n verify
+    return consteq(self._calc
+_checksum(secret), chk)
+                   ^^^^^^^^^^
+^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python
+3.11/site-packages/passlib/ha
+ndlers/bcrypt.py", line 655, 
+in _calc_checksum
+    hash = _bcrypt.hashpw(sec
+ret, config)
+           ^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^
+ValueError: password cannot b
+e longer than 72 bytes, trunc
+ate manually if necessary (e.
+g. my_password[:72])
+INFO:     Shutting down
+INFO:     Waiting for applica
+tion shutdown.
+INFO:     Application shutdow
+n complete.
+INFO:     Finished server pro
+cess [8]
+INFO:     Stopping reloader p
+rocess [1]
+INFO:     Will watch for chan
+ges in these directories: ['/
+app']
+INFO:     Uvicorn running on 
+http://0.0.0.0:8000 (Press CT
+RL+C to quit)
+INFO:     Started reloader pr
+ocess [1] using WatchFiles
+INFO:     Started server proc
+ess [8]
+INFO:     Waiting for applica
+tion startup.
+INFO:     Application startup
+ complete.
