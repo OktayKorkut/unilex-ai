@@ -7,6 +7,7 @@ from app.db.models import User
 from app.core.security import hash_password, verify_password, create_access_token, decode_access_token
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
 security = HTTPBearer()
 
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)):
@@ -35,8 +36,11 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
 
+class MessageResponse(BaseModel):
+    message: str
 
-@router.post("/register", status_code=status.HTTP_201_CREATED)
+
+@router.post("/register", status_code=status.HTTP_201_CREATED, response_model=MessageResponse)
 def register(body: RegisterRequest, db: Session = Depends(get_db)):
     if db.query(User).filter(User.email == body.email).first():
         raise HTTPException(status_code=400, detail="Email already registered")

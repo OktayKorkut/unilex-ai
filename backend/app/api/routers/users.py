@@ -8,25 +8,22 @@ from app.db.models import User, University
 
 router = APIRouter(prefix="/users", tags=["users"])
 
-# Response modeli
+
 class UserProfileResponse(BaseModel):
     id: int
     email: str
     full_name: str
     university_id: Optional[int]
 
-# Güncelleme için Request modeli
+    class Config:
+        from_attributes = True
+
 class UserUniversityUpdate(BaseModel):
     university_id: int
 
 @router.get("/me", response_model=UserProfileResponse)
 def get_user_profile(current_user: User = Depends(get_current_user)):
-    return {
-        "id": current_user.id,
-        "email": current_user.email,
-        "full_name": current_user.full_name,
-        "university_id": current_user.university_id,
-    }
+    return current_user
 
 @router.put("/me", response_model=UserProfileResponse)
 def update_user_university(
@@ -34,7 +31,7 @@ def update_user_university(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    # Seçilen üniversitenin id'si veritabanında var mı kontrol edelim
+    
     university = db.query(University).filter(University.id == data.university_id).first()
     if not university:
         raise HTTPException(
@@ -47,9 +44,4 @@ def update_user_university(
     db.commit()
     db.refresh(current_user)
 
-    return {
-        "id": current_user.id,
-        "email": current_user.email,
-        "full_name": current_user.full_name,
-        "university_id": current_user.university_id,
-    }
+    return current_user
