@@ -5,7 +5,7 @@ from sqlalchemy import text
 from qdrant_client import QdrantClient
 from app.core.config import settings
 from app.db.database import Base, engine, get_db
-from app.api.routers import auth, universities, chat, users
+from app.api.routers import auth, universities, chat, users, documents
 
 # Create tables on startup
 Base.metadata.create_all(bind=engine)
@@ -24,7 +24,7 @@ app.include_router(auth.router, prefix="/api/v1")
 app.include_router(users.router, prefix="/api/v1")
 app.include_router(universities.router, prefix="/api/v1")
 app.include_router(chat.router, prefix="/api/v1")
-
+app.include_router(documents.router, prefix="/api/v1")
 
 @app.get("/health")
 def health(db: Session = Depends(get_db)):

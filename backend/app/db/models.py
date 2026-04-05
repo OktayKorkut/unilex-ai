@@ -29,6 +29,7 @@ class University(Base):
     crawled_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     sessions: Mapped[list["ChatSession"]] = relationship(back_populates="university")
+    documents: Mapped[list["Document"]] = relationship(back_populates="university")
 
 
 class ChatSession(Base):
@@ -54,3 +55,16 @@ class Message(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     session: Mapped["ChatSession"] = relationship(back_populates="messages")
+
+
+class Document(Base):
+    __tablename__ = "documents"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    university_id: Mapped[int] = mapped_column(ForeignKey("universities.id"))
+    title: Mapped[str] = mapped_column(String(255))
+    content: Mapped[str] = mapped_column(Text)
+    source_url: Mapped[str] = mapped_column(String(512))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    university: Mapped["University"] = relationship(back_populates="documents")
