@@ -1,0 +1,17 @@
+[
+  {
+    "name": "Işık Üniversitesi",
+    "slug": "isik",
+    "mevzuat_url": "https://www.isikun.edu.tr/isik-hakkinda/mevzuat-ve-sayistay-raporlari/isik-universitesi-mevzuati"
+  },
+  {
+    "name": "Boğaziçi Üniversitesi",
+    "slug": "bogazici",
+    "mevzuat_url": "https://ogrencidairesi.bogazici.edu.tr/yonetmelikler-yonergeler-uygulama-esaslari"
+  },
+  {
+    "name": "İstanbul Teknik Üniversitesi (İTÜ)",
+    "slug": "itu",
+    "mevzuat_url": "https://www.sis.itu.edu.tr/TR/mevzuat/mevzuat.php"
+  }
+]
