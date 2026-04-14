@@ -13,38 +13,47 @@ class UniversityCreate(BaseModel):
     slug: str
     mevzuat_url: str
 
+class UniversityListResponse(BaseModel):
+    id: int
+    name: str
+    slug: str
+    is_crawled: bool
+    crawled_at: str | None = None
 
-@router.get("/")
+    class Config:
+        from_attributes = True
+
+class UniversityDetailResponse(BaseModel):
+    id: int
+    name: str
+    slug: str
+    mevzuat_url: str
+    is_crawled: bool
+    crawled_at: str | None = None
+
+    class Config:
+        from_attributes = True
+
+class UniversityCreateResponse(BaseModel):
+    message: str
+    id: int
+
+
+@router.get("/", response_model=list[UniversityListResponse])
 def list_universities(db: Session = Depends(get_db)):
     universities = db.query(University).all()
-    return [
-        {
-            "id": u.id,
-            "name": u.name,
-            "slug": u.slug,
-            "is_crawled": u.is_crawled,
-            "crawled_at": u.crawled_at,
-        }
-        for u in universities
-    ]
+    return universities
 
 
-@router.get("/{uni_id}")
+@router.get("/{uni_id}", response_model=UniversityDetailResponse)
 def get_university(uni_id: int, db: Session = Depends(get_db)):
     university = db.query(University).filter(University.id == uni_id).first()
     if not university:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="University not found")
-    return {
-        "id": university.id,
-        "name": university.name,
-        "slug": university.slug,
-        "mevzuat_url": university.mevzuat_url,
-        "is_crawled": university.is_crawled,
-        "crawled_at": university.crawled_at,
-    }
+    return university
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED)
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=UniversityCreateResponse)
 def create_university(
     data: UniversityCreate, 
     db: Session = Depends(get_db), 
