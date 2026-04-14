@@ -5,7 +5,7 @@ from datetime import datetime
 
 from app.db.database import get_db
 from app.db.models import ChatSession, University, User
-from app.api.routers.auth import get_current_user
+from app.api.deps import get_current_user
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
