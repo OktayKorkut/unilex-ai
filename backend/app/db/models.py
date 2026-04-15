@@ -37,11 +37,11 @@ class ChatSession(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    university_id: Mapped[int] = mapped_column(ForeignKey("universities.id"))
+    university_id: Mapped[int | None] = mapped_column(ForeignKey("universities.id"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     user: Mapped["User"] = relationship(back_populates="sessions")
-    university: Mapped["University"] = relationship(back_populates="sessions")
+    university: Mapped["University | None"] = relationship(back_populates="sessions")
     messages: Mapped[list["Message"]] = relationship(back_populates="session")
 
 
