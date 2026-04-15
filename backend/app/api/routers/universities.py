@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from datetime import datetime
 from app.db.database import get_db
 from app.db.models import University
 from app.api.deps import get_current_user
@@ -18,7 +19,7 @@ class UniversityListResponse(BaseModel):
     name: str
     slug: str
     is_crawled: bool
-    crawled_at: str | None = None
+    crawled_at: datetime | None = None
 
     class Config:
         from_attributes = True
@@ -29,7 +30,7 @@ class UniversityDetailResponse(BaseModel):
     slug: str
     mevzuat_url: str
     is_crawled: bool
-    crawled_at: str | None = None
+    crawled_at: datetime | None = None
 
     class Config:
         from_attributes = True
