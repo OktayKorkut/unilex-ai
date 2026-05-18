@@ -13,6 +13,24 @@ COLLECTION_NAME = "documents"
 VECTOR_SIZE = 1536   # text-embedding-3-small
 CHUNK_SIZE = 800
 CHUNK_OVERLAP = 100
+MAX_CHUNK_CHARS = 15_000  # conservative limit; /uniXXXX-encoded PDFs tokenize at ~4x density
+
+_openai_client: OpenAI | None = None
+_qdrant_client: QdrantClient | None = None
+
+
+def _get_openai() -> OpenAI:
+    global _openai_client
+    if _openai_client is None:
+        _openai_client = OpenAI(api_key=settings.OPENAI_API_KEY)
+    return _openai_client
+
+
+def _get_qdrant() -> QdrantClient:
+    global _qdrant_client
+    if _qdrant_client is None:
+        _qdrant_client = QdrantClient(host=settings.QDRANT_HOST, port=settings.QDRANT_PORT)
+    return _qdrant_client
 
 
 def _chunk_text(text: str) -> list[str]:
@@ -22,7 +40,7 @@ def _chunk_text(text: str) -> list[str]:
     while start < len(words):
         chunk = " ".join(words[start:start + CHUNK_SIZE])
         if chunk.strip():
-            chunks.append(chunk)
+            chunks.append(chunk[:MAX_CHUNK_CHARS])
         start += CHUNK_SIZE - CHUNK_OVERLAP
     return chunks
 
@@ -43,8 +61,8 @@ def embed_document(document: Document) -> None:
     op.add_field("document_id", document.id).add_field("title", document.title)
 
     try:
-        openai_client = OpenAI(api_key=settings.OPENAI_API_KEY)
-        qdrant = QdrantClient(host=settings.QDRANT_HOST, port=settings.QDRANT_PORT)
+        openai_client = _get_openai()
+        qdrant = _get_qdrant()
 
         _ensure_collection(qdrant)
 
@@ -106,11 +124,16 @@ def embed_university_documents(university_id: int, db: Session) -> int:
         op.add_field("document_count", len(documents))
 
         total_chunks = 0
+        failed = 0
         for doc in documents:
-            embed_document(doc)
-            total_chunks += len(_chunk_text(doc.content))
+            try:
+                embed_document(doc)
+                total_chunks += len(_chunk_text(doc.content))
+            except Exception:
+                failed += 1
+                logger.error({"event": "embed_document_skipped", "document_id": doc.id, "title": doc.title})
 
-        op.add_field("total_chunks", total_chunks).succeed()
+        op.add_field("total_chunks", total_chunks).add_field("failed_docs", failed).succeed()
         return total_chunks
 
     except Exception:

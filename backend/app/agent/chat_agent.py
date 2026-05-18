@@ -1,8 +1,7 @@
-from openai import OpenAI
-
-from app.core.config import settings
 from app.core.logger import get_logger
 from app.rag.retriever import retrieve
+from app.rag.embedder import _get_openai
+from app.core.config import settings
 
 logger = get_logger("chat_agent")
 
@@ -66,8 +65,7 @@ def ask(
     })
 
     try:
-        openai_client = OpenAI(api_key=settings.OPENAI_API_KEY)
-        response = openai_client.chat.completions.create(
+        response = _get_openai().chat.completions.create(
             model=settings.LLM_MODEL,
             messages=messages,
             temperature=0.2,
