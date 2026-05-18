@@ -4,7 +4,7 @@ from qdrant_client.models import Filter, FieldCondition, MatchValue
 
 from app.core.config import settings
 from app.core.logger import get_logger
-from app.rag.embedder import COLLECTION_NAME
+from app.rag.embedder import COLLECTION_NAME, _get_openai, _get_qdrant
 
 logger = get_logger("retriever")
 
@@ -20,8 +20,8 @@ def retrieve(query: str, university_id: int, top_k: int = 5) -> list[dict]:
     op.add_field("university_id", university_id).add_field("top_k", top_k)
 
     try:
-        openai_client = OpenAI(api_key=settings.OPENAI_API_KEY)
-        qdrant = QdrantClient(host=settings.QDRANT_HOST, port=settings.QDRANT_PORT)
+        openai_client = _get_openai()
+        qdrant = _get_qdrant()
 
         response = openai_client.embeddings.create(
             model=settings.EMBEDDING_MODEL,

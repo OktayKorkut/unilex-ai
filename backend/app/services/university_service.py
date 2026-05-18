@@ -122,16 +122,31 @@ class UniversityService:
     @staticmethod
     async def _ensure_embedded(university: University, db: Session, op) -> None:
         """
-        Üniversite daha önce crawl edilmişse Qdrant'ta chunk'ların
-        varlığını kontrol eder; yoksa yeniden embed eder.
+        Üniversite daha önce crawl edilmişse Qdrant'ta bu üniversiteye ait
+        chunk'ların varlığını kontrol eder; yoksa yeniden embed eder.
         """
         try:
             from qdrant_client import QdrantClient
+            from qdrant_client.models import Filter, FieldCondition, MatchValue
             from app.core.config import settings
 
             qdrant = QdrantClient(host=settings.QDRANT_HOST, port=settings.QDRANT_PORT)
             existing = [c.name for c in qdrant.get_collections().collections]
-            if COLLECTION_NAME not in existing:
+
+            needs_embed = COLLECTION_NAME not in existing
+            if not needs_embed:
+                count = qdrant.count(
+                    collection_name=COLLECTION_NAME,
+                    count_filter=Filter(
+                        must=[FieldCondition(
+                            key="university_id",
+                            match=MatchValue(value=university.id),
+                        )]
+                    ),
+                ).count
+                needs_embed = count == 0
+
+            if needs_embed:
                 op.add_field("re_embed", True)
                 embed_university_documents(university.id, db)
         except Exception:

@@ -20,6 +20,7 @@ class UniversityListResponse(BaseModel):
     slug: str
     is_crawled: bool
     crawled_at: datetime | None = None
+    crawl_status: str = "idle"
 
     class Config:
         from_attributes = True
@@ -31,6 +32,8 @@ class UniversityDetailResponse(BaseModel):
     mevzuat_url: str
     is_crawled: bool
     crawled_at: datetime | None = None
+    crawl_status: str = "idle"
+    crawl_error: str | None = None
 
     class Config:
         from_attributes = True
