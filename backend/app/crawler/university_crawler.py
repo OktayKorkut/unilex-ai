@@ -1,11 +1,10 @@
 import io
 import httpx
-from datetime import datetime
+from datetime import datetime, timezone
 from playwright.async_api import async_playwright, Page
 from pypdf import PdfReader
 from sqlalchemy.orm import Session
 from app.db.models import University, Document
-from app.rag.embedder import embed_university_documents
 
 
 MEVZUAT_KEYWORDS = [
@@ -27,7 +26,8 @@ class UniversityCrawler:
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True)
             context = await browser.new_context(
-                user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+                user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+                ignore_https_errors=True,
             )
             page = await context.new_page()
 
@@ -71,11 +71,8 @@ class UniversityCrawler:
                             result["errors"].append(f"{pdf_url}: {str(e)}")
 
                 university.is_crawled = True
-                university.crawled_at = datetime.utcnow()
+                university.crawled_at = datetime.now(timezone.utc)
                 db.commit()
-
-                chunks_added = embed_university_documents(university.id, db)
-                result["chunks_embedded"] = chunks_added
 
             except Exception as e:
                 result["errors"].append(f"Sayfa yüklenemedi: {str(e)}")
@@ -122,15 +119,23 @@ class UniversityCrawler:
             text = pdf_page.extract_text()
             if text:
                 pages_text.append(text.strip())
-        return "\n\n".join(pages_text)
+        raw = "\n\n".join(pages_text).replace("\x00", "")
+        # PDFs with unresolved Unicode escape sequences (/uniXXXX) are garbled — unusable for RAG
+        if raw and raw.count("/uni") > len(raw) / 20:
+            return ""
+        return raw
 
     def _save_document(self, db, university_id, title, content, source_url):
-        exists = db.query(Document).filter(Document.source_url == source_url).first()
-        if not exists:
-            db.add(Document(
-                university_id=university_id,
-                title=title[:255],
-                content=content,
-                source_url=source_url,
-            ))
-            db.commit()
+        try:
+            exists = db.query(Document).filter(Document.source_url == source_url).first()
+            if not exists:
+                db.add(Document(
+                    university_id=university_id,
+                    title=title[:255],
+                    content=content,
+                    source_url=source_url,
+                ))
+                db.commit()
+        except Exception:
+            db.rollback()
+            raise

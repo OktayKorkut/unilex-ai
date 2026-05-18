@@ -117,7 +117,8 @@ async def _try_deep_crawl(base: str, skip_url: str) -> "str | None":
     skip = skip_url.rstrip("/")
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
-        page = await browser.new_page()
+        context = await browser.new_context(ignore_https_errors=True)
+        page = await context.new_page()
         try:
             await page.goto(base, wait_until="domcontentloaded", timeout=20000)
             await page.wait_for_timeout(1500)
