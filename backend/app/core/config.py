@@ -23,6 +23,12 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 1 day
 
+    # CORS — production'da sadece frontend origin'i ekle
+    ALLOWED_ORIGINS: list[str] = ["*"]
+
+    # Scheduler — periyodik crawl aralığı (saat)
+    CRAWL_INTERVAL_HOURS: int = 24
+
     class Config:
         env_file = ".env"
 
