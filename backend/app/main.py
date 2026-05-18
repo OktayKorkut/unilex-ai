@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -7,22 +9,28 @@ from qdrant_client import QdrantClient
 from app.core.config import settings
 from app.core.exceptions import add_exception_handler
 from app.core.logger import get_logger
-from app.db.database import Base, engine, get_db
-from app.api.routers import auth, universities, chat, users, documents, crawler
+from app.core.scheduler import start_scheduler, stop_scheduler
+from app.db.database import get_db
+from app.api.routers import auth, universities, chat, users, documents, crawler, admin
 
 logger = get_logger("main")
 
 
-Base.metadata.create_all(bind=engine)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    start_scheduler()
+    yield
+    stop_scheduler()
 
-app = FastAPI(title=settings.APP_NAME, version="0.1.0")
+
+app = FastAPI(title=settings.APP_NAME, version="0.1.0", lifespan=lifespan)
 
 
 add_exception_handler(app)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -34,6 +42,7 @@ app.include_router(universities.router, prefix="/api/v1")
 app.include_router(chat.router, prefix="/api/v1")
 app.include_router(documents.router, prefix="/api/v1")
 app.include_router(crawler.router, prefix="/api/v1")
+app.include_router(admin.router, prefix="/api/v1")
 
 logger.info({"event": "startup", "app": settings.APP_NAME})
 

@@ -21,6 +21,9 @@ tiktoken==0.8.0
 playwright==1.49.0
 pypdf==5.1.0
 
+# Scheduler
+apscheduler==3.10.4
+
 # Utilities
 pydantic[email]==2.10.0
 pydantic-settings==2.6.0
