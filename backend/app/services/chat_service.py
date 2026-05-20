@@ -48,14 +48,27 @@ class ChatService:
             university_id=session.university_id,
             history=history,
         )
+        no_info_keywords = [
+            "bilgi bulunmamaktadır",
+            "bilgi yok",
+            "yeterli bilgi yok",
+            "tespit edilemedi",
+            "mevcut değildir",
+            "bilgi bulunamadı",
+            "bilgi mevcut değil",
+            "bulunamamıştır"
+        ]
+        has_no_info = any(kw in answer.lower() for kw in no_info_keywords) if answer else True
         op.add_field("needs_targeted_search", needs_targeted_search)
+        op.add_field("has_no_info", has_no_info)
         op.add_field("initial_sources", len(sources))
 
-        if needs_targeted_search:
+        if needs_targeted_search or has_no_info:
             university = db.query(University).filter(
                 University.id == session.university_id
             ).first()
 
+            added = 0
             if university:
                 try:
                     added = await search_and_embed_for_question(content, university, db)
@@ -71,15 +84,28 @@ class ChatService:
                         {"event": "targeted_search_failed", "university_id": university.id}
                     )
 
-            if not answer:
-                answer = _FALLBACK_MESSAGE
+            if not answer or (any(kw in answer.lower() for kw in no_info_keywords) and not added):
+                # Fallback to existing documents in database with a lower threshold (0.35)
+                # in case they have lower similarity scores due to encoding or translation issues
+                fallback_answer, fallback_sources, _ = ask(
+                    question=content,
+                    university_id=session.university_id,
+                    history=history,
+                    threshold=0.35,
+                )
+                if fallback_answer and not any(kw in fallback_answer.lower() for kw in no_info_keywords):
+                    answer = fallback_answer
+                    sources = fallback_sources
+                else:
+                    answer = _FALLBACK_MESSAGE
+                    sources = []
 
         op.add_field("answer_length", len(answer)).succeed()
         return answer, sources
 
     @staticmethod
-    def save_messages(session_id: int, question: str, answer: str, db: Session) -> None:
+    def save_messages(session_id: int, question: str, answer: str, db: Session, sources: list[dict] | None = None) -> None:
         """Kullanıcı sorusunu ve asistan yanıtını DB'ye kaydeder."""
         db.add(Message(session_id=session_id, role="user", content=question))
-        db.add(Message(session_id=session_id, role="assistant", content=answer))
+        db.add(Message(session_id=session_id, role="assistant", content=answer, sources=sources))
         db.commit()
