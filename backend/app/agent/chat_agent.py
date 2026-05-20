@@ -15,7 +15,7 @@ Görevin:
 
 Önemli: Bağlamda olmayan bilgileri uydurmak kesinlikle yasak."""
 
-RELEVANCE_THRESHOLD = 0.45
+RELEVANCE_THRESHOLD = 0.60
 
 
 def _build_context(chunks: list[dict]) -> str:
@@ -27,6 +27,7 @@ def ask(
     question: str,
     university_id: int,
     history: list[dict],
+    threshold: float = RELEVANCE_THRESHOLD,
 ) -> tuple[str, list[dict], bool]:
     """
     Soruyu RAG pipeline'ı aracılığıyla yanıtlar.
@@ -38,10 +39,10 @@ def ask(
     op = logger.start_operation("ask")
     op.add_field("university_id", university_id).add_field("question_len", len(question))
 
-    chunks = retrieve(query=question, university_id=university_id, top_k=5)
-    op.add_field("chunks_retrieved", len(chunks))
+    all_chunks = retrieve(query=question, university_id=university_id, top_k=10)
+    op.add_field("chunks_retrieved", len(all_chunks))
 
-    if not chunks:
+    if not all_chunks:
         op.add_field("result", "no_chunks").fail(exc_info=False)
         return (
             "Bu üniversiteye ait mevzuat belgelerinde sorunuzu yanıtlayacak içerik bulunamadı.",
@@ -49,12 +50,17 @@ def ask(
             True,
         )
 
+    # Filter chunks by threshold
+    chunks = [c for c in all_chunks if c["score"] >= threshold]
+
+    if not chunks:
+        max_score = max(c["score"] for c in all_chunks)
+        op.add_field("max_score", max_score)
+        op.add_field("result", "low_relevance").debug()
+        return "", all_chunks[:5], True
+
     max_score = max(c["score"] for c in chunks)
     op.add_field("max_score", max_score)
-
-    if max_score < RELEVANCE_THRESHOLD:
-        op.add_field("result", "low_relevance").debug()
-        return "", chunks, True
 
     context = _build_context(chunks)
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]

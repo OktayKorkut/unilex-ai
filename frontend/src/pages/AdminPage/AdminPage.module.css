@@ -1,0 +1,51 @@
+.metricCardTeal {
+  border-left: 4px solid #20c997;
+}
+
+.metricCardBlue {
+  border-left: 4px solid #339af0;
+}
+
+.metricCardYellow {
+  border-left: 4px solid #d4af37;
+}
+
+.metricCardRed {
+  border-left: 4px solid #ff6b6b;
+}
+
+.chartContainer {
+  position: relative;
+  height: 300px;
+}
+
+.chartAxis {
+  position: absolute;
+  bottom: 20px;
+  left: 30px;
+  right: 30px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.feedbackContainer {
+  display: flex;
+  flex-direction: column;
+  max-height: 450px;
+}
+
+.feedbackScrollArea {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 350px;
+  padding-right: 5px;
+}
+
+.feedbackMessage {
+  border-left: 3px solid #00bcd4;
+  border-radius: 4px;
+}
+
+.logIcon {
+  border: 1px solid #ccc;
+}

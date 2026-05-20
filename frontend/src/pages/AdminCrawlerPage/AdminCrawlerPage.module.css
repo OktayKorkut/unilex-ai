@@ -1,0 +1,35 @@
+.container {
+  max-width: 800px;
+  margin-left: 0;
+  padding: 0;
+}
+
+.dragZone {
+  border: 2px dashed #ced4da;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 3rem 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.dragZoneDragging {
+  border-color: #20c997;
+  background-color: rgba(32, 201, 151, 0.05);
+}
+
+.dragZone:hover {
+  border-color: #00bcd4;
+  background-color: rgba(0, 188, 212, 0.02);
+}
+
+.hiddenInput {
+  display: none;
+}
+
+.uniSelect {
+  background-color: #f8f9fa;
+  border: 1px solid #ced4da;
+}

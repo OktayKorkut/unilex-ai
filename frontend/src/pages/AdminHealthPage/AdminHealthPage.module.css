@@ -1,0 +1,31 @@
+.container {
+  max-width: 800px;
+  margin-left: 0;
+  padding: 0;
+}
+
+.dbCard {
+  position: relative;
+  overflow: hidden;
+}
+
+.statusBar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 4px;
+  width: 100%;
+}
+
+.statusBarConnected {
+  background-color: #0ca678;
+}
+
+.statusBarDisconnected {
+  background-color: #f03e3e;
+}
+
+.infoRow {
+  border-bottom: 1px solid #f1f3f5;
+  padding-bottom: 8px;
+}

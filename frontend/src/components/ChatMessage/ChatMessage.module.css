@@ -1,0 +1,62 @@
+.messageBubble {
+  margin-bottom: var(--mantine-spacing-xl);
+}
+
+.messageBody {
+  flex: 1;
+  max-width: 75%;
+  display: flex;
+  flex-direction: column;
+}
+
+.messageBodyUser {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.messageBodyAi {
+  align-self: flex-start;
+  align-items: flex-start;
+}
+
+.userMessage {
+  background-color: #e3fafc; /* cyan.1 */
+  border: 1px solid #99e9f2;
+  color: #0b7285;
+  border-top-right-radius: 4px;
+  box-shadow: 0 4px 10px rgba(0, 188, 212, 0.1);
+  width: 100%;
+}
+
+.aiMessage {
+  background-color: var(--mantine-color-white);
+  border-top-left-radius: 4px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+  width: 100%;
+}
+
+.messageText {
+  white-space: pre-line;
+}
+
+.sourceCard {
+  background-color: #f8f9fa;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.sourceCard:hover {
+  border-color: #00bcd4;
+  background-color: var(--mantine-color-white);
+  box-shadow: 0 5px 15px rgba(0, 188, 212, 0.15);
+}
+
+.feedbackSection {
+  border-top: 1px solid #f1f3f5;
+  margin-top: var(--mantine-spacing-lg);
+  padding-top: var(--mantine-spacing-sm);
+}
+
+.feedbackBtn {
+  transform-style: preserve-3d;
+}

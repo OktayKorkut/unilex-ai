@@ -1,0 +1,57 @@
+.wrapper {
+  background-color: #f8f9fa; /* Very light gray to distinguish from pure white features section */
+  padding: 100px 0;
+}
+
+.title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #1a1b1e;
+  margin-bottom: 1rem;
+}
+
+.step {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.2rem;
+  margin-bottom: 1.5rem;
+}
+
+.mockup {
+  background-color: white;
+  border: 1px solid #e9ecef;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.08);
+  position: relative;
+}
+
+/* Mac OS window controls decoration */
+.mockup::before {
+  content: '';
+  display: block;
+  height: 12px;
+  width: 12px;
+  border-radius: 50%;
+  background-color: #ff5f56;
+  box-shadow: 20px 0 0 #ffbd2e, 40px 0 0 #27c93f;
+  margin-bottom: 30px;
+}
+
+.userBubble {
+  max-width: 80%;
+  border-top-right-radius: 0;
+  color: #0b7285;
+  border: 1px solid #c5f6fa;
+}
+
+.botBubble {
+  max-width: 85%;
+  border-top-left-radius: 0;
+  border: 1px solid #dee2e6;
+}
+
+@media (max-width: 768px) {
+  .title {
+    font-size: 2rem;
+    text-align: center;
+  }
+}

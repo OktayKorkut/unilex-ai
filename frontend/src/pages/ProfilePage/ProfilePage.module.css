@@ -1,0 +1,147 @@
+.profilePage {
+  background-color: #0b132b;
+  min-height: 100vh;
+  padding-bottom: 6rem;
+  padding-top: 100px;
+}
+
+.glassCard {
+  background: rgba(11, 19, 43, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.glassCard:hover {
+  border-color: rgba(0, 188, 212, 0.3);
+  box-shadow: 0 10px 20px rgba(0, 188, 212, 0.05);
+}
+
+.chatItem {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 1.5rem;
+  margin-bottom: 1.5rem;
+  transition: opacity 0.2s ease;
+}
+
+.chatItem:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-bottom: 0;
+}
+
+.glowBar {
+  box-shadow: 0 0 15px rgba(0, 188, 212, 0.5);
+}
+
+.hoverCyan:hover {
+  color: #00bcd4 !important;
+}
+
+.leftColumnContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.avatarWrapper {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.avatarEl {
+  border: 3px solid #00bcd4;
+  box-shadow: 0 0 20px rgba(0, 188, 212, 0.3);
+}
+
+.roleBadge {
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 2px solid #0b132b;
+}
+
+.profileStatsContainer {
+  width: 100%;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 1.5rem;
+}
+
+.statsDivider {
+  border-left: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.monoFont {
+  font-family: monospace;
+}
+
+.flexCenterGap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.flexColumnGap {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.flexColumnSettings {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.campusTitle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.settingsDivider {
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+.settingsFooter {
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  margin-top: 0.5rem;
+  padding-top: 1rem;
+}
+
+.kvkkLink {
+  display: flex;
+  align-items: center;
+}
+
+.deleteBtn {
+  font-size: 0.875rem;
+}
+
+.historyContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.emptyHistory {
+  text-align: center;
+  padding: 3rem 0;
+}
+
+.capacityContainer {
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 1.5rem;
+  margin-top: 2rem;
+}
+
+.capacityTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

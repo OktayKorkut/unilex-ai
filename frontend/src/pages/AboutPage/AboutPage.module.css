@@ -1,0 +1,66 @@
+.container {
+  background-color: #0b132b;
+  min-height: 100vh;
+  padding-bottom: 6rem;
+  overflow-x: hidden;
+}
+
+.gradientCard {
+  background: linear-gradient(145deg, rgba(11, 19, 43, 0.8), rgba(26, 35, 58, 0.8));
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.gradientCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(32, 201, 151, 0.15), rgba(156, 39, 176, 0.15), rgba(0, 188, 212, 0.15));
+  z-index: 0;
+  opacity: 0.5;
+  transition: opacity 0.3s ease;
+}
+
+.gradientCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0, 188, 212, 0.15);
+  border: 1px solid rgba(0, 188, 212, 0.3);
+}
+
+.gradientCard:hover::before {
+  opacity: 1;
+}
+
+.cardContent {
+  position: relative;
+  z-index: 1;
+}
+
+.glowText {
+  background: linear-gradient(to right, #00bcd4, #20c997);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinningBg {
+  position: absolute;
+  width: 150%;
+  height: 150%;
+  background: conic-gradient(from 90deg, transparent, rgba(32, 201, 151, 0.3), transparent);
+  animation: spin 10s linear infinite;
+}

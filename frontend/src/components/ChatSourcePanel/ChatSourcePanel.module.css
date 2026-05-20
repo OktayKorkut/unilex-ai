@@ -1,0 +1,33 @@
+.aside {
+  background-color: var(--mantine-color-white);
+  border-left: 1px solid #e9ecef;
+  display: flex;
+  flex-direction: column;
+}
+
+.progressBar {
+  height: 4px;
+  background-color: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background-color: #00bcd4;
+  box-shadow: 0 0 10px #00bcd4;
+}
+
+.citationText {
+  white-space: pre-line;
+}
+
+.metaValue {
+  max-width: 60%;
+  text-align: right;
+}
+
+.emptyText {
+  text-align: center;
+  margin-top: 30%;
+}

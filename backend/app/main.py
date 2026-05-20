@@ -10,8 +10,12 @@ from app.core.config import settings
 from app.core.exceptions import add_exception_handler
 from app.core.logger import get_logger
 from app.core.scheduler import start_scheduler, stop_scheduler
-from app.db.database import get_db
-from app.api.routers import auth, universities, chat, users, documents, crawler, admin
+from app.db.database import get_db, engine, Base
+from app.db import models
+from app.api.routers import auth, universities, chat, users, documents, crawler, admin, feedback
+
+# Safe creation of any new tables (like feedbacks)
+Base.metadata.create_all(bind=engine)
 
 logger = get_logger("main")
 
@@ -43,6 +47,7 @@ app.include_router(chat.router, prefix="/api/v1")
 app.include_router(documents.router, prefix="/api/v1")
 app.include_router(crawler.router, prefix="/api/v1")
 app.include_router(admin.router, prefix="/api/v1")
+app.include_router(feedback.router, prefix="/api/v1")
 
 logger.info({"event": "startup", "app": settings.APP_NAME})
 
