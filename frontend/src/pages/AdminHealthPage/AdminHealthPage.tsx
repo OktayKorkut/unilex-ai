@@ -1,4 +1,5 @@
-import { AppShell, Group, Text, Paper, Badge, ThemeIcon, Button, Stack, Container, SimpleGrid, RingProgress, Alert, Loader } from '@mantine/core';
+import { AppShell, Group, Text, Paper, Badge, ThemeIcon, Button, Stack, Container, SimpleGrid, RingProgress, Alert, Loader, Burger } from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
 import { IconDatabase, IconActivity, IconRefresh, IconAlertCircle, IconCheck, IconServer } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
@@ -16,6 +17,7 @@ interface HealthStatus {
 }
 
 export default function AdminHealthPage() {
+  const [opened, { toggle, close }] = useDisclosure(false);
   const navigate = useNavigate();
   const [health, setHealth] = useState<HealthStatus | null>(null);
   const [loading, setLoading] = useState(true);
@@ -66,19 +68,24 @@ export default function AdminHealthPage() {
 
   return (
     <AppShell
-      navbar={{ width: 280, breakpoint: 'sm' }}
-      padding="xl"
+      navbar={{
+        width: 280,
+        breakpoint: 'sm',
+        collapsed: { mobile: !opened }
+      }}
+      padding={{ base: 'md', sm: 'xl' }}
       bg="gray.0"
     >
       {/* SIDEBAR Component */}
-      <AdminSidebar activePage="health" />
+      <AdminSidebar activePage="health" onClose={close} />
 
       <AppShell.Main>
         {/* HEADER */}
         <Group justify="space-between" mb="xl">
           <Group>
+            <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" color="dark" />
             <Text size="xl" fw={800}>Sistem Sağlığı & Durumu</Text>
-            <Badge color="cyan" variant="light" size="lg" radius="sm">Canlı Sunucu Bağlantısı</Badge>
+            <Badge color="cyan" variant="light" size="lg" radius="sm" visibleFrom="xs">Canlı Sunucu Bağlantısı</Badge>
           </Group>
           <Group>
             <Button 

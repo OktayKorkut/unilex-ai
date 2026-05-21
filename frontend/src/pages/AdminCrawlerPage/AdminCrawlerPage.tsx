@@ -1,5 +1,6 @@
-import { AppShell, Group, Text, Paper, Badge, ThemeIcon, ActionIcon, Button, Stack, Container, Progress, Select, Box, Loader, Alert } from '@mantine/core';
-import { IconSpider, IconSearch, IconBell, IconUpload, IconFileText, IconRefresh, IconAlertCircle, IconServer } from '@tabler/icons-react';
+import { AppShell, Group, Text, Paper, Badge, ThemeIcon, Button, Stack, Container, Progress, Select, Box, Loader, Alert, Burger } from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
+import { IconSpider, IconUpload, IconFileText, IconRefresh, IconAlertCircle, IconServer } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
 import AdminSidebar from '../../components/AdminSidebar/AdminSidebar';
@@ -23,6 +24,7 @@ interface CrawlStatusResponse {
 }
 
 export default function AdminCrawlerPage() {
+  const [opened, { toggle, close }] = useDisclosure(false);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -215,23 +217,24 @@ export default function AdminCrawlerPage() {
 
   return (
     <AppShell
-      navbar={{ width: 280, breakpoint: 'sm' }}
-      padding="xl"
+      navbar={{
+        width: 280,
+        breakpoint: 'sm',
+        collapsed: { mobile: !opened }
+      }}
+      padding={{ base: 'md', sm: 'xl' }}
       bg="gray.0"
     >
       {/* SIDEBAR Component */}
-      <AdminSidebar activePage="crawler" />
+      <AdminSidebar activePage="crawler" onClose={close} />
 
       <AppShell.Main>
         {/* HEADER */}
         <Group justify="space-between" mb="xl">
           <Group>
+            <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" color="dark" />
             <Text size="xl" fw={800}>Doküman Yükleme & Crawler</Text>
-            <Badge color="cyan" variant="light" size="lg" radius="sm">RAG Eğitim Modülü</Badge>
-          </Group>
-          <Group>
-            <ActionIcon variant="light" color="gray" size="lg" radius="md"><IconSearch size={20} /></ActionIcon>
-            <ActionIcon variant="light" color="gray" size="lg" radius="md"><IconBell size={20} /></ActionIcon>
+            <Badge color="cyan" variant="light" size="lg" radius="sm" visibleFrom="xs">RAG Eğitim Modülü</Badge>
           </Group>
         </Group>
 

@@ -93,7 +93,7 @@ export default function Hero() {
             <Text c="dimmed" size="xl" mt="xl" maw={600} mx="auto" ta="center">
               RAG teknolojisiyle güçlendirilmiş UniLex ile akademik kaynaklarınızı saniyeler içinde tarayın, sentezleyin ve bilimsel doğrulukla raporlayın.
             </Text>
-            <Flex justify="center" gap="md" mt={40}>
+            <Flex justify="center" gap="md" mt={40} direction={{ base: 'column', sm: 'row' }} align={{ base: 'stretch', sm: 'center' }} px={{ base: 'md', sm: 0 }} maw={450} mx="auto">
               <Button size="xl" radius="xl" variant="filled" color="cyan" className={classes.actionBtn} onClick={handleStart}>
                 {isLoggedIn ? 'Asistana Git' : 'Ücretsiz Başla'}
               </Button>

@@ -18,7 +18,7 @@ interface ChatSession {
 }
 
 export default function ChatPage() {
-  const [opened, { toggle }] = useDisclosure();
+  const [opened, { toggle, close }] = useDisclosure();
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<number | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -105,6 +105,7 @@ export default function ChatPage() {
   // Select and load chat session messages
   const selectSession = async (sessionId: number, authToken = token) => {
     if (!authToken) return;
+    close();
     setActiveSessionId(sessionId);
     setSearchParams({ session_id: String(sessionId) }, { replace: true });
     setMessages([]);
@@ -137,6 +138,7 @@ export default function ChatPage() {
   // Create a new chat session
   const createNewSession = async (authToken = token) => {
     if (!authToken) return;
+    close();
     setErrorMsg('');
 
     let universityId = null;
@@ -401,7 +403,7 @@ export default function ChatPage() {
       <AppShell.Main className={classes.mainContent}>
         {/* Mobile Header */}
         <Group h={60} px="md" hiddenFrom="sm" className={classes.mobileHeader}>
-          <Burger opened={opened} onClick={toggle} size="sm" />
+          <Burger opened={opened} onClick={toggle} size="sm" color="dark" />
           <Text fw={700}>UniLex</Text>
         </Group>
 

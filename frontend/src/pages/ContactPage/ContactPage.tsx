@@ -66,9 +66,9 @@ export default function ContactPage() {
 
   return (
     <div ref={containerRef} className={classes.contactPage}>
-      <Container size="xl" pt={200} pb={50}>
+      <Container size="xl" pt={{ base: 100, md: 200 }} pb={50}>
         <div className={`contact-header ${classes.contactHeaderContainer}`}>
-          <Title order={1} className={classes.contactTitle}>
+          <Title order={1} className={classes.contactTitle} fz={{ base: '2.2rem', sm: '3rem' }}>
             Bize <span className={classes.titleSpan}>Ulaşın</span>
           </Title>
           <Text c="gray.4" mt="md" size="lg" maw={600} mx="auto" pb={50}>
@@ -76,42 +76,42 @@ export default function ContactPage() {
           </Text>
         </div>
 
-        <SimpleGrid cols={{ base: 1, md: 2 }} spacing={50}>
+        <SimpleGrid cols={{ base: 1, md: 2 }} spacing={{ base: 'md', md: 50 }}>
           {/* Sol Kısım: İletişim Bilgileri */}
           <Box className="contact-info">
             <Title order={3} c="white" mb="xl">UniLex AI İletişim Bilgileri</Title>
 
             <Group wrap="nowrap" mb="xl">
-              <ThemeIcon size={50} radius="md" color="cyan" variant="light">
+              <ThemeIcon size={50} radius="md" color="cyan" variant="light" style={{ flexShrink: 0 }}>
                 <IconMapPin size={24} />
               </ThemeIcon>
-              <div>
+              <div style={{ minWidth: 0, width: '100%' }}>
                 <Text fw={700} c="white">Adres</Text>
-                <Text c="gray.4">Maslak, Sarıyer, İstanbul</Text>
+                <Text c="gray.4" style={{ wordBreak: 'break-word' }}>Maslak, Sarıyer, İstanbul</Text>
               </div>
             </Group>
 
             <Group wrap="nowrap" mb="xl">
-              <ThemeIcon size={50} radius="md" color="yellow" variant="light">
+              <ThemeIcon size={50} radius="md" color="yellow" variant="light" style={{ flexShrink: 0 }}>
                 <IconPhone size={24} />
               </ThemeIcon>
-              <div>
+              <div style={{ minWidth: 0, width: '100%' }}>
                 <Text fw={700} c="white">Telefon</Text>
-                <Text c="gray.4">+90 (850) 123 45 67</Text>
+                <Text c="gray.4" style={{ wordBreak: 'break-word' }}>+90 (850) 123 45 67</Text>
               </div>
             </Group>
 
             <Group wrap="nowrap" mb="xl">
-              <ThemeIcon size={50} radius="md" color="teal" variant="light">
+              <ThemeIcon size={50} radius="md" color="teal" variant="light" style={{ flexShrink: 0 }}>
                 <IconMail size={24} />
               </ThemeIcon>
-              <div>
+              <div style={{ minWidth: 0, width: '100%' }}>
                 <Text fw={700} c="white">E-Posta</Text>
-                <Text c="gray.4">destek@unilex-ai.com / contact@unilex-ai.com</Text>
+                <Text c="gray.4" style={{ wordBreak: 'break-all' }}>destek@unilex-ai.com / contact@unilex-ai.com</Text>
               </div>
             </Group>
 
-            <Paper p="xl" radius="md" className={classes.infoCard}>
+            <Paper p={{ base: 'md', sm: 'xl' }} radius="md" className={classes.infoCard}>
               <Text fw={700} c="white" size="lg" mb="sm">Destek Saatleri</Text>
               <Text size="sm" c="gray.4">Hafta içi her gün: 09:00 - 18:00</Text>
               <Text size="sm" c="gray.4" mt="xs">Mesajlarınıza maksimum 24 saat içerisinde yanıt verilmektedir.</Text>
@@ -124,7 +124,7 @@ export default function ContactPage() {
             onSubmit={handleSubmit}
             className={`contact-form ${classes.formCard}`}
             radius="md"
-            p="xl"
+            p={{ base: 'md', sm: 'xl' }}
           >
             <Title order={3} c="white" mb="xl">Mesaj Gönder</Title>
 

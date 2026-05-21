@@ -1,5 +1,5 @@
 import { AppShell, Group, Text, Paper, Avatar, ActionIcon, NavLink, Image } from '@mantine/core';
-import { IconDashboard, IconSpider, IconHeartbeat, IconSettings, IconLogout } from '@tabler/icons-react';
+import { IconDashboard, IconSpider, IconHeartbeat, IconLogout } from '@tabler/icons-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import classes from './AdminSidebar.module.css';
@@ -12,10 +12,11 @@ interface UserProfile {
 }
 
 interface AdminSidebarProps {
-  activePage: 'dashboard' | 'crawler' | 'health' | 'settings';
+  activePage: 'dashboard' | 'crawler' | 'health';
+  onClose?: () => void;
 }
 
-export default function AdminSidebar({ activePage }: AdminSidebarProps) {
+export default function AdminSidebar({ activePage, onClose }: AdminSidebarProps) {
   const [user, setUser] = useState<UserProfile | null>(null);
   const navigate = useNavigate();
 
@@ -68,6 +69,7 @@ export default function AdminSidebar({ activePage }: AdminSidebarProps) {
           color="cyan"
           variant="light"
           className={activePage === 'dashboard' ? classes.navLinkActive : classes.navLink}
+          onClick={onClose}
         />
         <NavLink
           label="Crawler (PDF)"
@@ -78,6 +80,7 @@ export default function AdminSidebar({ activePage }: AdminSidebarProps) {
           color="cyan"
           variant="light"
           className={activePage === 'crawler' ? classes.navLinkActive : classes.navLink}
+          onClick={onClose}
         />
         <NavLink
           label="Sistem Sağlığı"
@@ -88,15 +91,9 @@ export default function AdminSidebar({ activePage }: AdminSidebarProps) {
           color="cyan"
           variant="light"
           className={activePage === 'health' ? classes.navLinkActive : classes.navLink}
+          onClick={onClose}
         />
-        <NavLink
-          label="Ayarlar"
-          leftSection={<IconSettings size={18} />}
-          active={activePage === 'settings'}
-          color="cyan"
-          variant="light"
-          className={activePage === 'settings' ? classes.navLinkActive : classes.navLink}
-        />
+
       </div>
 
       <Paper withBorder p="sm" radius="md" className={classes.userPanel}>

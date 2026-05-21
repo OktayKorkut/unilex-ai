@@ -22,7 +22,7 @@ export default function HowItWorks() {
             <Title order={2} className={classes.title}>
               Saniyeler İçinde Sonuç Alın
             </Title>
-            <Text c="dimmed" size="lg" mb="xl">
+            <Text c="dimmed" size="lg" mb="xl" ta={{ base: 'center', md: 'left' }}>
               Yüzlerce sayfalık yönetmelikleri okumanıza gerek yok. Sorunuzu
               sorun, UniLex sizin için en doğru kaynağı bulup sentezlesin.
             </Text>
@@ -74,7 +74,7 @@ export default function HowItWorks() {
           </Grid.Col>
 
           <Grid.Col span={{ base: 12, md: 6 }}>
-            <Paper shadow="xl" radius="lg" p="xl" className={classes.mockup}>
+            <Paper shadow="xl" radius="lg" p={{ base: 'md', sm: 'xl' }} className={classes.mockup}>
               {/* User Message */}
               <Group align="flex-start" justify="flex-end" mb="xl">
                 <Paper

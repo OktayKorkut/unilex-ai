@@ -1,4 +1,4 @@
-import { Container, Title, Text, SimpleGrid, Grid, Card, Group, Badge, Button, ThemeIcon, Box, List, Avatar } from '@mantine/core';
+import { Container, Title, Text, SimpleGrid, Grid, Card, Group, Badge, Button, ThemeIcon, Box, List, Avatar, Flex } from '@mantine/core';
 import { IconShieldCheck, IconBulb, IconEye, IconCheck, IconSchool, IconMicroscope, IconUsersGroup, IconArrowRight, IconDatabase } from '@tabler/icons-react';
 import { useRef } from 'react';
 import gsap from 'gsap';
@@ -102,7 +102,7 @@ export default function AboutPage() {
             AKADEMİK GELECEK
           </Badge>
 
-          <Title className="hero-element" order={1} c="white" mb="lg" style={{ fontSize: '3.5rem', fontWeight: 900, lineHeight: 1.2 }}>
+          <Title className="hero-element" order={1} c="white" mb="lg" fz={{ base: '2.2rem', sm: '3.5rem' }} fw={900} lh={1.2}>
             Akademik Aydınlanma İçin <span style={{ color: '#d4af37' }}>Tasarlandı</span>
           </Title>
 
@@ -122,16 +122,22 @@ export default function AboutPage() {
       </Container>
 
       {/* 2. BENTO GRID (TEMEL DEĞERLERİMİZ) */}
-      <Container size="xl" pt={80} pb={80} className="bento-section">
+      <Container size="xl" pt={{ base: 40, md: 80 }} pb={{ base: 40, md: 80 }} className="bento-section">
         <Title order={2} c="white" mb="xs">Temel Değerlerimiz</Title>
         <Text c="gray.4" mb={40}>Yapay zekayı akademik dürüstlük çatısı altında yeniden tanımlıyoruz.</Text>
 
         <Grid align="stretch" style={{ gap: 'var(--mantine-spacing-xl)' }}>
           {/* Şeffaflık Kartı */}
           <Grid.Col span={{ base: 12, md: 8 }}>
-            <Card radius="lg" p="xl" className={`bento-card ${classes.gradientCard}`} h="100%">
-              <div className={classes.cardContent} style={{ display: 'flex', height: '100%', alignItems: 'center' }}>
-                <Box style={{ flex: 1, paddingRight: '2rem' }}>
+            <Card radius="lg" p={{ base: 'md', sm: 'xl' }} className={`bento-card ${classes.gradientCard}`} h="100%">
+              <Flex
+                direction={{ base: 'column', sm: 'row' }}
+                gap="xl"
+                align="center"
+                h="100%"
+                className={classes.cardContent}
+              >
+                <Box style={{ flex: 1 }}>
                   <ThemeIcon size={50} radius="md" color="cyan" variant="light" mb="xl">
                     <IconEye size={24} />
                   </ThemeIcon>
@@ -141,18 +147,18 @@ export default function AboutPage() {
                   </Text>
                 </Box>
                 {/* Dekoratif Görsel Alanı */}
-                <Box style={{ flex: 1, height: '200px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative' }}>
+                <Box style={{ flex: 1, width: '100%', height: '200px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative' }}>
                   <div className={classes.spinningBg} />
                   <div style={{ position: 'absolute', inset: '2px', background: '#0b132b', borderRadius: '10px' }} />
                   <IconBulb size={60} color="#20c997" style={{ zIndex: 1, opacity: 0.5 }} />
                 </Box>
-              </div>
+              </Flex>
             </Card>
           </Grid.Col>
 
           {/* Akademik Dürüstlük Kartı */}
           <Grid.Col span={{ base: 12, md: 4 }}>
-            <Card radius="lg" p="xl" className={`bento-card ${classes.gradientCard}`} h="100%">
+            <Card radius="lg" p={{ base: 'md', sm: 'xl' }} className={`bento-card ${classes.gradientCard}`} h="100%">
               <div className={classes.cardContent}>
                 <ThemeIcon size={50} radius="md" color="grape" variant="light" mb="xl">
                   <IconShieldCheck size={24} />
@@ -168,8 +174,13 @@ export default function AboutPage() {
 
           {/* İnovasyon Kartı */}
           <Grid.Col span={12}>
-            <Card radius="lg" p="xl" className={`bento-card ${classes.gradientCard}`}>
-              <div className={classes.cardContent} style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', alignItems: 'center' }}>
+            <Card radius="lg" p={{ base: 'md', sm: 'xl' }} className={`bento-card ${classes.gradientCard}`}>
+              <Flex
+                direction={{ base: 'column', md: 'row' }}
+                gap="xl"
+                align={{ base: 'stretch', md: 'center' }}
+                className={classes.cardContent}
+              >
                 <Box style={{ flex: '1 1 300px' }}>
                   <Title order={3} c="white" mb="sm">İnovasyon</Title>
                   <Text c="gray.4" size="md" mb="xl">
@@ -185,7 +196,7 @@ export default function AboutPage() {
                   </Group>
                 </Box>
 
-                <Box style={{ flex: '1 1 200px', display: 'flex', gap: '1rem' }}>
+                <Box style={{ flex: '1 1 200px', display: 'flex', gap: '1rem', width: '100%' }}>
                   <Card bg="rgba(0,0,0,0.3)" p="lg" radius="md" style={{ flex: 1, border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
                     <Text size="xl" fw={900} className={classes.glowText} style={{ fontSize: '2rem' }}>99%</Text>
                     <Text size="sm" c="gray.5">Doğruluk Payı</Text>
@@ -195,18 +206,18 @@ export default function AboutPage() {
                     <Text size="sm" c="gray.5">Kesintisiz Destek</Text>
                   </Card>
                 </Box>
-              </div>
+              </Flex>
             </Card>
           </Grid.Col>
         </Grid>
       </Container>
 
       {/* 3. TEKNOLOJİK TEMELİMİZ: RAG */}
-      <Container size="xl" pt={80} pb={80} className="rag-section">
+      <Container size="xl" pt={{ base: 40, md: 80 }} pb={{ base: 40, md: 80 }} className="rag-section">
         <SimpleGrid cols={{ base: 1, md: 2 }} spacing={60} style={{ alignItems: 'center' }}>
           <Box className="rag-content">
             <Badge color="cyan" variant="light" mb="md">RETRIEVAL-AUGMENTED GENERATION</Badge>
-            <Title order={2} c="white" mb="lg" style={{ fontSize: '2.5rem', lineHeight: 1.1 }}>
+            <Title order={2} c="white" mb="lg" fz={{ base: '1.8rem', sm: '2.5rem' }} lh={1.1}>
               Teknolojik Temelimiz: <br /><span className={classes.glowText}>RAG</span>
             </Title>
             <Text c="gray.4" size="lg" mb="xl">
@@ -225,7 +236,7 @@ export default function AboutPage() {
             </List>
           </Box>
 
-          <Box className="rag-image" style={{ position: 'relative', height: '400px' }}>
+          <Box className="rag-image" h={{ base: 300, md: 400 }} style={{ position: 'relative' }}>
             <div style={{ position: 'absolute', inset: 0, borderRadius: '24px', background: 'linear-gradient(45deg, rgba(11, 19, 43, 0.5), rgba(0, 188, 212, 0.2))', border: '1px solid rgba(0, 188, 212, 0.3)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               {/* Siber Çip Görseli Efekti */}
               <div style={{ width: '150px', height: '150px', background: 'rgba(0, 188, 212, 0.1)', border: '2px solid #00bcd4', borderRadius: '16px', boxShadow: '0 0 50px rgba(0, 188, 212, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
@@ -245,9 +256,15 @@ export default function AboutPage() {
       </Container>
 
       {/* 4. AKADEMİK KÖKLERİMİZ */}
-      <Box pt={80} pb={20} mt={60} className="roots-section">
+      <Box pt={{ base: 40, md: 80 }} pb={20} mt={{ base: 30, md: 60 }} className="roots-section">
         <Container size="xl">
-          <Group justify="space-between" align="flex-end" mb={50}>
+          <Flex
+            direction={{ base: 'column', sm: 'row' }}
+            justify="space-between"
+            align={{ base: 'flex-start', sm: 'flex-end' }}
+            gap="md"
+            mb={50}
+          >
             <Box maw={600}>
               <Title order={2} c="white" mb="md">Akademik Köklerimiz</Title>
               <Text c="gray.4">
@@ -255,7 +272,7 @@ export default function AboutPage() {
               </Text>
             </Box>
             <Badge color="gray" variant="outline" size="lg" style={{ letterSpacing: '2px' }}>IŞIK UNIVERSITY AI LAB</Badge>
-          </Group>
+          </Flex>
 
           <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="xl">
             {rootsData.map((item, index) => {

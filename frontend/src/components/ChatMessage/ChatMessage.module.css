@@ -9,6 +9,12 @@
   flex-direction: column;
 }
 
+@media (max-width: 768px) {
+  .messageBody {
+    max-width: 90%;
+  }
+}
+
 .messageBodyUser {
   align-self: flex-end;
   align-items: flex-end;

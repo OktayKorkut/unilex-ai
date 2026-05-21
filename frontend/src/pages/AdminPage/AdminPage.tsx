@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AppShell, Group, Text, Paper, SimpleGrid, Badge, ThemeIcon, Divider, ActionIcon, Box, Loader, Alert, Avatar } from '@mantine/core';
-import { IconSearch, IconBell, IconActivity, IconCheck, IconAlertCircle, IconInfoCircle, IconUsers, IconSchool, IconFileText, IconMessage } from '@tabler/icons-react';
+import { AppShell, Group, Text, Paper, SimpleGrid, Badge, ThemeIcon, Divider, ActionIcon, Box, Loader, Alert, Avatar, Burger } from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
+import { IconActivity, IconCheck, IconAlertCircle, IconInfoCircle, IconUsers, IconSchool, IconFileText, IconMessage } from '@tabler/icons-react';
 import AdminSidebar from '../../components/AdminSidebar/AdminSidebar';
 import classes from './AdminPage.module.css';
 
@@ -23,6 +24,7 @@ interface FeedbackData {
 }
 
 export default function AdminPage() {
+  const [opened, { toggle, close }] = useDisclosure(false);
   const [stats, setStats] = useState<StatsData | null>(null);
   const [feedbacks, setFeedbacks] = useState<FeedbackData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,23 +82,23 @@ export default function AdminPage() {
 
   return (
     <AppShell
-      navbar={{ width: 280, breakpoint: 'sm' }}
-      padding="xl"
+      navbar={{
+        width: 280,
+        breakpoint: 'sm',
+        collapsed: { mobile: !opened }
+      }}
+      padding={{ base: 'md', sm: 'xl' }}
       bg="gray.0"
     >
       {/* SIDEBAR Component */}
-      <AdminSidebar activePage="dashboard" />
-
+      <AdminSidebar activePage="dashboard" onClose={close} />
       <AppShell.Main>
         {/* HEADER */}
         <Group justify="space-between" mb="xl">
           <Group>
+            <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" color="dark" />
             <Text size="xl" fw={800}>Sistem İzleme</Text>
-            <Badge color="teal" variant="light" size="lg" radius="sm">Canlı Veri Akışı Aktif</Badge>
-          </Group>
-          <Group>
-            <ActionIcon variant="light" color="gray" size="lg" radius="md"><IconSearch size={20} /></ActionIcon>
-            <ActionIcon variant="light" color="gray" size="lg" radius="md"><IconBell size={20} /></ActionIcon>
+            <Badge color="teal" variant="light" size="lg" radius="sm" visibleFrom="xs">Canlı Veri Akışı Aktif</Badge>
           </Group>
         </Group>
 
@@ -153,25 +155,6 @@ export default function AdminPage() {
               </Paper>
             </SimpleGrid>
 
-            {/* CHART AREA */}
-            <Paper withBorder p="xl" radius="md" mb="xl" bg="white" className={classes.chartContainer}>
-              <Group justify="space-between">
-                <div>
-                  <Text fw={700}>Sistem Yükü Geçmişi <Badge size="xs" color="gray" variant="light">Simüle Edildi</Badge></Text>
-                  <Text size="sm" c="dimmed">Son 24 saatlik veri işleme ve sorgu yoğunluğu.</Text>
-                </div>
-                <Text size="sm" fw={500}>Günlük</Text>
-              </Group>
-              {/* Axis mockup */}
-              <div className={classes.chartAxis}>
-                <Text size="xs" c="dimmed">00:00</Text>
-                <Text size="xs" c="dimmed">04:00</Text>
-                <Text size="xs" c="dimmed">08:00</Text>
-                <Text size="xs" c="dimmed">12:00</Text>
-                <Text size="xs" c="dimmed">16:00</Text>
-                <Text size="xs" c="dimmed">20:00</Text>
-              </div>
-            </Paper>
 
             {/* BOTTOM ROW */}
             <SimpleGrid cols={{ base: 1, lg: 2 }} spacing="lg">
