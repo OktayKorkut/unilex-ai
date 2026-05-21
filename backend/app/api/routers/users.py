@@ -17,6 +17,9 @@ class UserProfileResponse(BaseModel):
     full_name: str
     is_admin: bool
     university_id: Optional[int]
+    history_saved: bool
+    anonymized: bool
+    avatar_url: Optional[str]
 
     class Config:
         from_attributes = True
@@ -25,6 +28,9 @@ class UserUpdate(BaseModel):
     university_id: Optional[int] = None
     full_name: Optional[str] = None
     password: Optional[str] = None
+    history_saved: Optional[bool] = None
+    anonymized: Optional[bool] = None
+    avatar_url: Optional[str] = None
 
 @router.get("/me", response_model=UserProfileResponse)
 def get_user_profile(current_user: User = Depends(get_current_user)):
@@ -60,6 +66,15 @@ def update_user_profile(
                 detail="Şifre en az 6 karakter olmalıdır"
             )
         current_user.hashed_password = hash_password(data.password)
+
+    if data.history_saved is not None:
+        current_user.history_saved = data.history_saved
+
+    if data.anonymized is not None:
+        current_user.anonymized = data.anonymized
+
+    if data.avatar_url is not None:
+        current_user.avatar_url = data.avatar_url.strip() or None
 
     db.commit()
     db.refresh(current_user)
