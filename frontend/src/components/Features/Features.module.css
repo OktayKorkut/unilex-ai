@@ -1,0 +1,69 @@
+.featuresWrapper {
+  background-color: #ffffff;
+  min-height: 50vh;
+  padding-bottom: 80px;
+}
+
+.sectionTitle {
+  font-size: 2.5rem;
+  color: #1a1b1e;
+  font-weight: 800;
+}
+
+.marqueeContainer {
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+  display: flex;
+  padding: 20px 0 60px 0;
+  /* Add subtle gradient masks to fade the edges */
+  mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+}
+
+.marqueeContent {
+  display: flex;
+  gap: 2rem;
+  animation: scroll 35s linear infinite;
+  padding-left: 2rem;
+  width: max-content;
+}
+
+.marqueeContent:hover {
+  animation-play-state: paused;
+}
+
+.featureCard {
+  min-width: 350px;
+  max-width: 350px;
+  background-color: white;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  border-color: var(--card-color-light);
+  border-top: 4px solid var(--card-color);
+}
+
+.featureCard:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.08), 0 0 20px var(--card-color-glow);
+  border-color: var(--card-color);
+}
+
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    /* Translate left by exactly 50% since we duplicated the items */
+    transform: translateX(calc(-50% - 1rem));
+  }
+}
+
+@media (max-width: 768px) {
+  .sectionTitle {
+    font-size: 2rem;
+  }
+  .featureCard {
+    min-width: 280px;
+    max-width: 280px;
+  }
+}

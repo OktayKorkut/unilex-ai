@@ -1,0 +1,62 @@
+.navbar {
+  border-right: 1px solid #1a233a;
+  display: flex;
+  flex-direction: column;
+}
+
+.logoLink {
+  text-decoration: none;
+  color: inherit;
+}
+
+.logoGroup {
+  margin-bottom: var(--mantine-spacing-xl);
+  padding-left: var(--mantine-spacing-sm);
+  padding-right: var(--mantine-spacing-sm);
+  margin-top: var(--mantine-spacing-md);
+}
+
+.logoText {
+  font-weight: 900;
+  font-size: var(--mantine-font-size-sm);
+  color: var(--mantine-color-white);
+}
+
+.logoSubtitle {
+  font-size: var(--mantine-font-size-xs);
+  color: var(--mantine-color-cyan-text);
+  font-weight: 700;
+}
+
+.navigationSection {
+  flex: 1;
+  margin-top: 2rem;
+}
+
+.navLink {
+  border-radius: 8px;
+  margin-bottom: 8px;
+  color: #a0aec0 !important;
+}
+
+.navLinkActive {
+  border-radius: 8px;
+  margin-bottom: 8px;
+  color: var(--mantine-color-white) !important;
+}
+
+.userPanel {
+  border-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.userTitle {
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 700;
+  color: var(--mantine-color-white);
+}
+
+.userSubtitle {
+  font-size: var(--mantine-font-size-xs);
+  color: var(--mantine-color-cyan-text);
+}

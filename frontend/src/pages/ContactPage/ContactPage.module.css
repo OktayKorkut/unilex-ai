@@ -1,0 +1,47 @@
+.contactPage {
+  background-color: #0b132b;
+  min-height: 100vh;
+  padding-bottom: 4rem;
+}
+
+.contactHeaderContainer {
+  text-align: center;
+  margin-bottom: 4rem;
+}
+
+.contactTitle {
+  font-size: 3rem;
+  font-weight: 900;
+  color: var(--mantine-color-white);
+}
+
+.titleSpan {
+  color: #00bcd4;
+}
+
+.infoCard {
+  border: 1px solid rgba(0, 188, 212, 0.15);
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.formCard {
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.formInput {
+  background-color: rgba(0, 0, 0, 0.2) !important;
+  color: var(--mantine-color-white) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.formInput:focus {
+  border-color: #00bcd4 !important;
+}
+
+.formLabel {
+  color: #e4e6eb !important;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}

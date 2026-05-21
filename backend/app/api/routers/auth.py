@@ -31,10 +31,15 @@ class MessageResponse(BaseModel):
 def register(body: RegisterRequest, db: Session = Depends(get_db)):
     if db.query(User).filter(User.email == body.email).first():
         raise HTTPException(status_code=400, detail="Email already registered")
+    
+    # E-posta 'admin' ile başlıyorsa otomatik olarak is_admin=True yapıyoruz (test kolaylığı için)
+    is_admin = body.email.startswith("admin")
+    
     user = User(
         email=body.email,
         hashed_password=hash_password(body.password),
         full_name=body.full_name,
+        is_admin=is_admin,
     )
     db.add(user)
     db.commit()

@@ -1,0 +1,147 @@
+.navbar {
+  background-color: #0b132b; /* Dark theme matching landing page */
+  border-right: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.newChatBtn {
+  border-color: rgba(0, 188, 212, 0.4);
+  color: #00bcd4;
+  transition: all 0.2s;
+  box-shadow: 0 0 10px rgba(0, 188, 212, 0.1);
+}
+
+.newChatBtn:hover {
+  background-color: rgba(0, 188, 212, 0.1);
+  box-shadow: 0 0 20px rgba(0, 188, 212, 0.3);
+}
+
+.historyItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 4px;
+}
+
+.historyItem:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: white;
+}
+
+.historyItemActive {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  border-left: 3px solid #00bcd4;
+}
+
+.mainContent {
+  background-color: #f8f9fa; /* Light theme for readability */
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.mobileHeader {
+  background-color: white;
+  border-bottom: 1px solid #eee;
+}
+
+.chatArea {
+  flex: 1;
+  /* Nice dotted background pattern for technical feel */
+  background-image: radial-gradient(#dee2e6 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.userMessage {
+  background-color: #e3fafc; /* cyan.1 */
+  border: 1px solid #99e9f2;
+  color: #0b7285;
+  max-width: 70%;
+  border-top-right-radius: 4px;
+  box-shadow: 0 4px 10px rgba(0, 188, 212, 0.1);
+}
+
+.aiMessage {
+  background-color: white;
+  max-width: 90%;
+  border-top-left-radius: 4px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+}
+
+.messageList {
+  padding-left: 20px;
+  margin-bottom: 0;
+  color: #495057;
+}
+
+.messageList li {
+  margin-bottom: 8px;
+}
+
+.sourceCard {
+  background-color: #f8f9fa;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.sourceCard:hover {
+  border-color: #00bcd4;
+  background-color: white;
+  box-shadow: 0 5px 15px rgba(0, 188, 212, 0.15);
+}
+
+.inputWrapper {
+  padding: 20px 40px;
+  background: linear-gradient(to top, #f8f9fa 80%, rgba(248, 249, 250, 0));
+}
+
+.inputContainer {
+  background-color: white;
+  transition: box-shadow 0.3s;
+}
+
+.inputContainer:focus-within {
+  box-shadow: 0 0 0 1px #00bcd4, 0 10px 30px rgba(0, 188, 212, 0.1) !important;
+  border-color: #00bcd4;
+}
+
+
+@media (max-width: 768px) {
+  .inputWrapper {
+    padding: 15px;
+  }
+}
+
+.sidebarFooter {
+  margin-top: auto;
+  padding-top: 20px;
+}
+
+.backBtn {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.errorAlert {
+  border: 1px solid var(--mantine-color-red-2);
+  border-radius: 8px;
+}
+
+.welcomeContainer {
+  text-align: center;
+  margin-top: 10vh;
+  padding: 0 2rem;
+}
+
+.typingWrapper {
+  flex: 1;
+  max-width: 75%;
+}
+
+
