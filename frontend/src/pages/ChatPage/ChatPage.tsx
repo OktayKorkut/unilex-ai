@@ -14,6 +14,7 @@ const API_BASE_URL = 'http://localhost:8000/api/v1';
 interface ChatSession {
   id: number;
   university_id?: number;
+  title?: string | null;
   created_at: string;
 }
 
@@ -60,17 +61,6 @@ export default function ChatPage() {
     setToken(storedToken);
     fetchSessions(storedToken);
   }, [navigate]);
-
-  // Sync active session if URL search parameters change
-  useEffect(() => {
-    const urlSessionId = searchParams.get('session_id');
-    if (urlSessionId && Number(urlSessionId) !== activeSessionId) {
-      const numId = Number(urlSessionId);
-      if (sessions.some(s => s.id === numId)) {
-        selectSession(numId);
-      }
-    }
-  }, [searchParams, sessions, activeSessionId]);
 
   // Fetch chat sessions
   const fetchSessions = async (authToken: string) => {
@@ -119,8 +109,6 @@ export default function ChatPage() {
       });
       if (res.ok) {
         const data = await res.json();
-        // Backend returns SessionDetailResponse: { id, university_id, created_at, messages }
-        // Each message in DB has role: 'user' or 'assistant' (mapped here)
         const formattedMessages = data.messages.map((m: any) => ({
           id: m.id,
           role: m.role === 'assistant' ? 'assistant' : 'user',
@@ -129,6 +117,8 @@ export default function ChatPage() {
           sources: m.sources || []
         }));
         setMessages(formattedMessages);
+      } else {
+        setErrorMsg('Sohbet içeriği yüklenemedi.');
       }
     } catch (err) {
       setErrorMsg('Sohbet içeriği yüklenemedi.');
@@ -221,10 +211,16 @@ export default function ChatPage() {
         };
         setMessages(prev => [...prev, newAiMsg]);
 
-        // If the session didn't have a university, it might be dynamically resolved now
-        if (data.university_id) {
+        // Update session university and title if resolved/generated
+        if (data.university_id || data.session_title) {
           setSessions(prev => prev.map(s =>
-            s.id === activeSessionId ? { ...s, university_id: data.university_id } : s
+            s.id === activeSessionId
+              ? {
+                  ...s,
+                  ...(data.university_id ? { university_id: data.university_id } : {}),
+                  ...(data.session_title ? { title: data.session_title } : {}),
+                }
+              : s
           ));
         }
       } else {
@@ -366,7 +362,7 @@ export default function ChatPage() {
                 <Group gap="xs" style={{ flex: 1, minWidth: 0 }} wrap="nowrap">
                   <IconMessageCircle size={18} style={{ flexShrink: 0 }} />
                   <Text size="sm" truncate>
-                    {`Sohbet #${s.id} (${new Date(s.created_at).toLocaleDateString('tr-TR')})`}
+                    {s.title || `Sohbet #${s.id} (${new Date(s.created_at).toLocaleDateString('tr-TR')})`}
                   </Text>
                 </Group>
                 <ActionIcon

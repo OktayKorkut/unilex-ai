@@ -7,10 +7,12 @@ router'dan ayırır.
 
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.core.logger import get_logger
 from app.db.models import ChatSession, Message, University
 from app.agent.chat_agent import ask
 from app.crawler.targeted_crawler import search_and_embed_for_question
+from app.rag.embedder import _get_openai
 
 logger = get_logger("chat_service")
 
@@ -102,6 +104,29 @@ class ChatService:
 
         op.add_field("answer_length", len(answer)).succeed()
         return answer, sources
+
+    @staticmethod
+    def generate_title(question: str) -> str:
+        """İlk kullanıcı sorusundan GPT ile kısa sohbet başlığı üretir."""
+        try:
+            response = _get_openai().chat.completions.create(
+                model=settings.LLM_MODEL,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": (
+                            "Kullanıcının sorusunu en fazla 6 kelimelik kısa bir başlığa dönüştür. "
+                            "Yalnızca başlığı yaz, başka hiçbir şey ekleme."
+                        ),
+                    },
+                    {"role": "user", "content": question},
+                ],
+                max_tokens=20,
+                temperature=0.3,
+            )
+            return response.choices[0].message.content.strip()[:120]
+        except Exception:
+            return question[:80]
 
     @staticmethod
     def save_messages(session_id: int, question: str, answer: str, db: Session, sources: list[dict] | None = None) -> None:

@@ -34,6 +34,7 @@ class SessionCreateResponse(BaseModel):
 class SessionListResponse(BaseModel):
     id: int
     university_id: Optional[int]
+    title: Optional[str]
     created_at: datetime
 
     class Config:
@@ -70,6 +71,7 @@ class MessageResponse(BaseModel):
     answer: str
     university_id: Optional[int]
     sources: list[dict]
+    session_title: Optional[str] = None
 
 
 # ---------------------------------------------------------------------------
@@ -165,6 +167,12 @@ async def send_message(
 
     # Soruyu yanıtla
     answer, sources = await ChatService.answer_question(session, data.content, db)
+
+    # İlk mesajsa GPT ile sohbet başlığı üret
+    if session.title is None:
+        session.title = ChatService.generate_title(data.content)
+        db.commit()
+
     ChatService.save_messages(session_id, data.content, answer, db, sources=sources)
 
     op.add_field("university_id", session.university_id).add_field("sources", len(sources)).succeed()
@@ -173,6 +181,7 @@ async def send_message(
         "answer": answer,
         "university_id": session.university_id,
         "sources": sources,
+        "session_title": session.title,
     }
 
 
