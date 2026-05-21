@@ -45,6 +45,7 @@ class MessageDetailResponse(BaseModel):
     role: str
     content: str
     created_at: datetime
+    sources: Optional[list[dict]] = None
 
     class Config:
         from_attributes = True
@@ -164,7 +165,7 @@ async def send_message(
 
     # Soruyu yanıtla
     answer, sources = await ChatService.answer_question(session, data.content, db)
-    ChatService.save_messages(session_id, data.content, answer, db)
+    ChatService.save_messages(session_id, data.content, answer, db, sources=sources)
 
     op.add_field("university_id", session.university_id).add_field("sources", len(sources)).succeed()
     return {
