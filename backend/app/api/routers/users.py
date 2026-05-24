@@ -1,4 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Response
+from fastapi import APIRouter, Depends, HTTPException, status, Response, File, UploadFile, Request
+import os
+import shutil
+import uuid
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Optional
@@ -79,6 +82,59 @@ def update_user_profile(
     db.commit()
     db.refresh(current_user)
 
+    return current_user
+
+
+@router.post("/me/avatar", response_model=UserProfileResponse)
+def upload_avatar(
+    request: Request,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    allowed_types = ["image/jpeg", "image/png", "image/gif", "image/webp"]
+    if file.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Yalnızca JPEG, PNG, GIF veya WEBP formatındaki resimler yüklenebilir."
+        )
+    
+    static_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "static")
+    avatars_dir = os.path.join(static_dir, "avatars")
+    os.makedirs(avatars_dir, exist_ok=True)
+    
+    ext = os.path.splitext(file.filename)[1]
+    if not ext:
+        if file.content_type == "image/jpeg":
+            ext = ".jpg"
+        elif file.content_type == "image/png":
+            ext = ".png"
+        elif file.content_type == "image/gif":
+            ext = ".gif"
+        elif file.content_type == "image/webp":
+            ext = ".webp"
+        else:
+            ext = ".png"
+
+    filename = f"avatar_{current_user.id}_{uuid.uuid4().hex}{ext}"
+    file_path = os.path.join(avatars_dir, filename)
+    
+    try:
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Dosya kaydedilirken bir hata oluştu: {str(e)}"
+        )
+        
+    base_url = str(request.base_url).rstrip('/')
+    avatar_url = f"{base_url}/static/avatars/{filename}"
+    
+    current_user.avatar_url = avatar_url
+    db.commit()
+    db.refresh(current_user)
+    
     return current_user
 
 

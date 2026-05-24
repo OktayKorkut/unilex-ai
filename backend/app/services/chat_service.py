@@ -129,8 +129,12 @@ class ChatService:
             return question[:80]
 
     @staticmethod
-    def save_messages(session_id: int, question: str, answer: str, db: Session, sources: list[dict] | None = None) -> None:
-        """Kullanıcı sorusunu ve asistan yanıtını DB'ye kaydeder."""
-        db.add(Message(session_id=session_id, role="user", content=question))
-        db.add(Message(session_id=session_id, role="assistant", content=answer, sources=sources))
+    def save_messages(session_id: int, question: str, answer: str, db: Session, sources: list[dict] | None = None) -> Message:
+        """Kullanıcı sorusunu ve asistan yanıtını DB'ye kaydeder ve asistan mesajını döner."""
+        user_msg = Message(session_id=session_id, role="user", content=question)
+        assistant_msg = Message(session_id=session_id, role="assistant", content=answer, sources=sources)
+        db.add(user_msg)
+        db.add(assistant_msg)
         db.commit()
+        db.refresh(assistant_msg)
+        return assistant_msg

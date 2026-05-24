@@ -109,8 +109,20 @@ def embed_document(document: Document) -> None:
         qdrant.upsert(collection_name=COLLECTION_NAME, points=points)
         op.add_field("points_upserted", len(points)).succeed()
 
-    except Exception:
+    except Exception as e:
         op.fail()
+        try:
+            from app.db.database import SessionLocal
+            from app.services.system_log_service import create_system_log
+            with SessionLocal() as session:
+                create_system_log(
+                    session,
+                    "error",
+                    "Vektör DB Hatası",
+                    f"{document.title} belgesi için vektör çıkarılırken hata oluştu: {str(e)[:250]}"
+                )
+        except Exception:
+            pass
         raise
 
 
@@ -134,6 +146,16 @@ def embed_university_documents(university_id: int, db: Session) -> int:
                 logger.error({"event": "embed_document_skipped", "document_id": doc.id, "title": doc.title})
 
         op.add_field("total_chunks", total_chunks).add_field("failed_docs", failed).succeed()
+        
+        # Log successful embedding
+        from app.services.system_log_service import create_system_log
+        create_system_log(
+            db,
+            "info",
+            "Model Embedding Güncellendi",
+            f"{settings.LLM_MODEL} ({settings.EMBEDDING_MODEL}) ağırlıkları yenilendi. {total_chunks} adet vektör güncellendi."
+        )
+        
         return total_chunks
 
     except Exception:
