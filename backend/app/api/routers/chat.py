@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from datetime import datetime
 from typing import Optional
+import re
 
 from app.db.database import get_db
 from app.db.models import ChatSession, University, User
@@ -47,6 +48,8 @@ class MessageDetailResponse(BaseModel):
     content: str
     created_at: datetime
     sources: Optional[list[dict]] = None
+    feedback_rating: Optional[str] = None
+    feedback_id: Optional[int] = None
 
     class Config:
         from_attributes = True
@@ -67,11 +70,29 @@ class MessageRequest(BaseModel):
 
 
 class MessageResponse(BaseModel):
+    id: Optional[int] = None
     question: str
     answer: str
     university_id: Optional[int]
     sources: list[dict]
     session_title: Optional[str] = None
+
+
+def mask_pii(text: str) -> str:
+    # 1. E-mail regex
+    email_pattern = r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+'
+    text = re.sub(email_pattern, '[E-POSTA]', text)
+
+    # 2. Turkish phone format regex
+    # Handles: +90 5xx xxx xx xx, 05xx xxx xx xx, 5xx-xxx-xxxx, etc.
+    phone_pattern = r'(?:\+?90[-. ]?)?\(?0?[5-9][0-9]{2}\)?[-. ]?[0-9]{3}[-. ]?[0-9]{2}[-. ]?[0-9]{2}'
+    text = re.sub(phone_pattern, '[TELEFON]', text)
+
+    # 3. 11-digit Turkish National ID (TC Kimlik No)
+    tc_pattern = r'\b[1-9][0-9]{10}\b'
+    text = re.sub(tc_pattern, '[TC KİMLİK NO]', text)
+
+    return text
 
 
 # ---------------------------------------------------------------------------
@@ -149,16 +170,21 @@ async def send_message(
         op.fail(exc_info=False)
         raise SessionNotFoundError()
 
+    content_to_process = data.content
+    if current_user.anonymized:
+        content_to_process = mask_pii(content_to_process)
+
     # Üniversite henüz belirlenmemişse mesajdan tespit et ve hazırla
     if session.university_id is None:
         university, error_msg = await UniversityService.resolve_for_session(
-            session, data.content, db
+            session, content_to_process, db
         )
         if university is None:
-            ChatService.save_messages(session_id, data.content, error_msg, db)
+            if current_user.history_saved:
+                ChatService.save_messages(session_id, content_to_process, error_msg, db)
             op.add_field("result", "university_unresolved").fail(exc_info=False)
             return {
-                "question": data.content,
+                "question": content_to_process,
                 "answer": error_msg,
                 "university_id": None,
                 "sources": [],
@@ -166,18 +192,22 @@ async def send_message(
         op.add_field("university_id", university.id)
 
     # Soruyu yanıtla
-    answer, sources = await ChatService.answer_question(session, data.content, db)
+    answer, sources = await ChatService.answer_question(session, content_to_process, db)
 
+    assistant_msg_id = None
     # İlk mesajsa GPT ile sohbet başlığı üret
-    if session.title is None:
-        session.title = ChatService.generate_title(data.content)
-        db.commit()
+    if current_user.history_saved:
+        if session.title is None:
+            session.title = ChatService.generate_title(content_to_process)
+            db.commit()
 
-    ChatService.save_messages(session_id, data.content, answer, db, sources=sources)
+        saved_msg = ChatService.save_messages(session_id, content_to_process, answer, db, sources=sources)
+        assistant_msg_id = saved_msg.id
 
     op.add_field("university_id", session.university_id).add_field("sources", len(sources)).succeed()
     return {
-        "question": data.content,
+        "id": assistant_msg_id,
+        "question": content_to_process,
         "answer": answer,
         "university_id": session.university_id,
         "sources": sources,

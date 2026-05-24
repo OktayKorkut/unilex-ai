@@ -48,11 +48,39 @@
 .avatarWrapper {
   position: relative;
   margin-bottom: 1.5rem;
+  cursor: pointer;
+  display: inline-block;
 }
 
 .avatarEl {
   border: 3px solid #00bcd4;
   box-shadow: 0 0 20px rgba(0, 188, 212, 0.3);
+}
+
+.avatarOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  border: 3px solid #00bcd4;
+  text-align: center;
+  padding: 10px;
+}
+
+.avatarWrapper:hover .avatarOverlay {
+  opacity: 1;
 }
 
 .roleBadge {

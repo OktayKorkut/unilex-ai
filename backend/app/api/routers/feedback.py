@@ -1,5 +1,6 @@
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.orm import Session
 from app.db.database import get_db
@@ -16,11 +17,24 @@ class FeedbackCreate(BaseModel):
     message: str
 
 
+class ChatFeedbackCreate(BaseModel):
+    message_id: int
+    user_question: str
+    ai_response: str
+    rating: str  # "Helpful" | "Not Helpful"
+    comment: Optional[str] = None
+
+
 class FeedbackResponse(BaseModel):
     id: int
-    full_name: str
-    email: str
-    message: str
+    full_name: Optional[str] = None
+    email: Optional[str] = None
+    message: Optional[str] = None
+    user_question: Optional[str] = None
+    ai_response: Optional[str] = None
+    rating: Optional[str] = None
+    comment: Optional[str] = None
+    message_id: Optional[int] = None
     created_at: datetime
 
     class Config:
@@ -40,11 +54,60 @@ def create_feedback(body: FeedbackCreate, db: Session = Depends(get_db)):
     return feedback
 
 
+@router.post("/feedbacks/chat-feedback", status_code=status.HTTP_201_CREATED, response_model=FeedbackResponse)
+def create_chat_feedback(body: ChatFeedbackCreate, db: Session = Depends(get_db)):
+    # Check if a feedback for this message_id already exists.
+    existing_feedback = db.query(Feedback).filter(Feedback.message_id == body.message_id).first()
+    if existing_feedback:
+        existing_feedback.rating = body.rating
+        existing_feedback.comment = body.comment
+        db.commit()
+        db.refresh(existing_feedback)
+        return existing_feedback
+
+    feedback = Feedback(
+        message_id=body.message_id,
+        user_question=body.user_question,
+        ai_response=body.ai_response,
+        rating=body.rating,
+        comment=body.comment,
+    )
+    db.add(feedback)
+    db.commit()
+    db.refresh(feedback)
+    return feedback
+
+
 @router.get("/admin/feedbacks", response_model=list[FeedbackResponse])
 def get_feedbacks(
     db: Session = Depends(get_db),
     admin_user=Depends(get_current_admin),
 ):
-    # Retrieve feedbacks ordered by creation time descending
-    feedbacks = db.query(Feedback).order_by(Feedback.created_at.desc()).all()
+    # Retrieve only contact page feedbacks (where rating is null)
+    feedbacks = db.query(Feedback).filter(Feedback.rating.is_(None)).order_by(Feedback.created_at.desc()).all()
     return feedbacks
+
+
+@router.get("/admin/bad-feedbacks", response_model=list[FeedbackResponse])
+def get_bad_feedbacks(
+    db: Session = Depends(get_db),
+    _admin=Depends(get_current_admin),
+):
+    # Retrieve only "Not Helpful" feedbacks ordered by creation time descending
+    feedbacks = db.query(Feedback).filter(Feedback.rating == "Not Helpful").order_by(Feedback.created_at.desc()).all()
+    return feedbacks
+
+
+@router.delete("/feedbacks/chat-feedback/{feedback_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_chat_feedback(feedback_id: int, db: Session = Depends(get_db)):
+    feedback = db.query(Feedback).filter(Feedback.id == feedback_id).first()
+    if not feedback:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Geri bildirim bulunamadı."
+        )
+    db.delete(feedback)
+    db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+

@@ -9,6 +9,7 @@ interface UserProfile {
   email: string;
   full_name: string;
   is_admin: boolean;
+  avatar_url?: string;
 }
 
 interface AdminSidebarProps {
@@ -99,7 +100,7 @@ export default function AdminSidebar({ activePage, onClose }: AdminSidebarProps)
       <Paper withBorder p="sm" radius="md" className={classes.userPanel}>
         <Group justify="space-between" wrap="nowrap">
           <Group gap="sm" wrap="nowrap">
-            <Avatar radius="xl" color="cyan" size="sm">
+            <Avatar radius="xl" color="cyan" size="sm" src={user?.avatar_url || undefined}>
               {user?.full_name ? getInitials(user.full_name) : 'A'}
             </Avatar>
             <div>

@@ -5,7 +5,7 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import classes from './ContactPage.module.css';
 
-const API_BASE_URL = 'http://localhost:8000/api/v1';
+import { API_BASE_URL } from '../../config';
 
 export default function ContactPage() {
   const containerRef = useRef<HTMLDivElement>(null);

@@ -1,6 +1,7 @@
 import { Container, Title, Text, SimpleGrid, Grid, Card, Group, Badge, Button, ThemeIcon, Box, List, Avatar, Flex } from '@mantine/core';
 import { IconShieldCheck, IconBulb, IconEye, IconCheck, IconSchool, IconMicroscope, IconUsersGroup, IconArrowRight, IconDatabase } from '@tabler/icons-react';
 import { useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -31,6 +32,19 @@ const rootsData = [
 
 export default function AboutPage() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+
+  const handleStart = () => {
+    if (localStorage.getItem('token')) {
+      navigate('/chat');
+    } else {
+      window.dispatchEvent(new Event('open-auth-modal'));
+    }
+  };
+
+  const handleContact = () => {
+    navigate('/contact');
+  };
 
   useGSAP(() => {
     // Hero Animasyonu
@@ -111,11 +125,11 @@ export default function AboutPage() {
           </Text>
 
           <Group justify="center" className="hero-element">
-            <Button size="lg" radius="xl" color="cyan" rightSection={<IconArrowRight size={18} />}>
-              Hemen Keşfet
+            <Button size="lg" radius="xl" color="cyan" rightSection={<IconArrowRight size={18} />} onClick={handleStart}>
+              Asistanı Dene
             </Button>
-            <Button size="lg" radius="xl" variant="default" bg="rgba(255,255,255,0.05)" c="white" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
-              Lab Günlüklerini Oku
+            <Button size="lg" radius="xl" variant="default" bg="rgba(255,255,255,0.05)" c="white" style={{ border: '1px solid rgba(255,255,255,0.1)' }} onClick={handleContact}>
+              İletişime Geç
             </Button>
           </Group>
         </Box>

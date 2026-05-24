@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 import AdminSidebar from '../../components/AdminSidebar/AdminSidebar';
 import classes from './AdminHealthPage.module.css';
 
-const HEALTH_URL = 'http://localhost:8000/health';
+import { HEALTH_URL } from '../../config';
 
 interface HealthStatus {
   status: string;

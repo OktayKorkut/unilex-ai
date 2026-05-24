@@ -20,6 +20,7 @@ interface UserProfile {
   full_name: string;
   is_admin: boolean;
   university_id?: number;
+  avatar_url?: string;
 }
 
 export default function Header() {
@@ -104,7 +105,7 @@ export default function Header() {
               <Menu.Target>
                 <UnstyledButton className={classes.userMenuBtn}>
                   <Group gap={8}>
-                    <Avatar color="cyan" radius="xl" size="sm">
+                    <Avatar color="cyan" radius="xl" size="sm" src={user.avatar_url || undefined}>
                       {(user.full_name || user.email || 'U')
                         .split(' ')
                         .filter(Boolean)
@@ -235,7 +236,7 @@ export default function Header() {
           {user ? (
             <Stack gap="sm">
               <Group gap="sm" p="sm" style={{ borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)', width: '100%', marginBottom: '15px' }}>
-                <Avatar color="cyan" radius="xl">
+                <Avatar color="cyan" radius="xl" src={user.avatar_url || undefined}>
                   {(user.full_name || user.email || 'U')
                     .split(' ')
                     .filter(Boolean)

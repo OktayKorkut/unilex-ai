@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Title, Box, Alert, TextInput, PasswordInput, Button, Switch, Select, Divider, Group, Anchor, Text, Badge } from '@mantine/core';
-import { IconUser, IconCheck, IconAlertCircle, IconMail, IconLock, IconShieldLock, IconSchool, IconChevronRight, IconTrash } from '@tabler/icons-react';
+import { IconUser, IconCheck, IconAlertCircle, IconMail, IconLock, IconShieldLock, IconSchool, IconChevronRight, IconTrash, IconPhoto } from '@tabler/icons-react';
 import classes from '../../pages/ProfilePage/ProfilePage.module.css';
 
 interface UserProfile {
@@ -8,6 +8,9 @@ interface UserProfile {
   email: string;
   full_name: string;
   university_id?: number;
+  avatar_url?: string;
+  history_saved: boolean;
+  anonymized: boolean;
 }
 
 interface ProfileSettingsProps {
@@ -23,7 +26,7 @@ interface ProfileSettingsProps {
   onUniversityChange: (val: string | null) => Promise<void>;
 }
 
-const API_BASE_URL = 'http://localhost:8000/api/v1';
+import { API_BASE_URL } from '../../config';
 
 export default function ProfileSettings({
   user,
@@ -38,15 +41,18 @@ export default function ProfileSettings({
   onUniversityChange,
 }: ProfileSettingsProps) {
   const [fullName, setFullName] = useState(user.full_name);
+  const [avatarUrl, setAvatarUrl] = useState(user.avatar_url || '');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [updateStatus, setUpdateStatus] = useState<{ type: 'success' | 'error' | null; message: string }>({ type: null, message: '' });
 
-  // Update fullName if user prop changes
+  // Update fullName and avatarUrl if user prop changes
   useEffect(() => {
     setFullName(user.full_name);
-  }, [user.full_name]);
+    setAvatarUrl(user.avatar_url || '');
+  }, [user.full_name, user.avatar_url]);
 
   useEffect(() => {
     if (updateStatus.type) {
@@ -56,6 +62,58 @@ export default function ProfileSettings({
       return () => clearTimeout(timer);
     }
   }, [updateStatus.type]);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      setUpdateStatus({ 
+        type: 'error', 
+        message: 'Yalnızca JPEG, PNG, GIF veya WEBP formatındaki resimler yüklenebilir.' 
+      });
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    setUploading(true);
+    setUpdateStatus({ type: null, message: '' });
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/users/me/avatar`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      if (res.ok) {
+        const updatedUser = await res.json();
+        onUserUpdate(updatedUser);
+        setAvatarUrl(updatedUser.avatar_url || '');
+        setUpdateStatus({ 
+          type: 'success', 
+          message: 'Profil resminiz başarıyla yüklendi.' 
+        });
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        window.dispatchEvent(new Event('user-updated'));
+      } else {
+        const errData = await res.json();
+        setUpdateStatus({ 
+          type: 'error', 
+          message: errData.detail || 'Resim yüklenirken bir hata oluştu.' 
+        });
+      }
+    } catch (err) {
+      setUpdateStatus({ type: 'error', message: 'Sunucu ile bağlantı kurulamadı.' });
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,7 +131,10 @@ export default function ProfileSettings({
 
     setLoading(true);
     try {
-      const payload: any = { full_name: fullName.trim() };
+      const payload: any = { 
+        full_name: fullName.trim(),
+        avatar_url: avatarUrl.trim()
+      };
       if (password) {
         payload.password = password;
       }
@@ -149,6 +210,38 @@ export default function ProfileSettings({
                 label: classes.formLabel
               }}
             />
+
+            <Box>
+              <TextInput
+                label="Profil Resmi (Avatar URL)"
+                placeholder="https://example.com/avatar.jpg"
+                value={avatarUrl}
+                onChange={(e) => setAvatarUrl(e.target.value)}
+                leftSection={<IconPhoto size={16} color="gray" />}
+                classNames={{
+                  input: classes.formInput,
+                  label: classes.formLabel
+                }}
+              />
+              <Group mt="xs" justify="flex-end">
+                <Button
+                  variant="light"
+                  color="cyan"
+                  size="xs"
+                  loading={uploading}
+                  onClick={() => document.getElementById('settings-avatar-file-input')?.click()}
+                >
+                  Bilgisayardan Resim Seç
+                </Button>
+                <input
+                  id="settings-avatar-file-input"
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={handleAvatarUpload}
+                />
+              </Group>
+            </Box>
 
             <TextInput
               label="E-posta Adresi"
