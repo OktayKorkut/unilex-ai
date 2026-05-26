@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from app.db.database import get_db
@@ -136,3 +136,35 @@ def promote_user(
     db.commit()
     db.refresh(user)
     return user
+
+
+from pydantic import field_validator
+
+class SystemLogResponse(BaseModel):
+    id: int
+    level: str
+    title: str
+    message: str
+    created_at: datetime
+
+    @field_validator('created_at', mode='before')
+    @classmethod
+    def ensure_tz(cls, v):
+        if isinstance(v, datetime) and v.tzinfo is None:
+            return v.replace(tzinfo=timezone.utc)
+        return v
+
+    class Config:
+        from_attributes = True
+
+
+from app.services.system_log_service import get_system_logs
+
+
+@router.get("/logs", response_model=list[SystemLogResponse])
+def list_system_logs(
+    db: Session = Depends(get_db),
+    _admin: User = Depends(get_current_admin),
+):
+    return get_system_logs(db, limit=15)
+

@@ -77,12 +77,12 @@ export default function ChatMessage({
                   className={classes.sourceCard}
                   onClick={() => onOpenSource(src)}
                 >
-                  <Group justify="space-between" wrap="nowrap">
-                    <Group gap="xs" wrap="nowrap">
-                      <ThemeIcon color="cyan" variant="light" size="sm">
+                  <Group justify="space-between" wrap="nowrap" style={{ width: '100%' }}>
+                    <Group gap="xs" wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
+                      <ThemeIcon color="cyan" variant="light" size="sm" style={{ flexShrink: 0 }}>
                         <IconPaperclip size={14} />
                       </ThemeIcon>
-                      <div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
                         <Text size="xs" fw={700} truncate>
                           {src.title || 'Mevzuat Dökümanı'}
                         </Text>
@@ -91,7 +91,7 @@ export default function ChatMessage({
                         </Text>
                       </div>
                     </Group>
-                    <IconChevronRight size={14} color="gray" />
+                    <IconChevronRight size={14} color="gray" style={{ flexShrink: 0 }} />
                   </Group>
                 </Paper>
               ))}

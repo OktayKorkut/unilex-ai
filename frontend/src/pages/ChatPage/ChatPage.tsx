@@ -9,7 +9,7 @@ import ChatMessage, { type Message } from '../../components/ChatMessage/ChatMess
 import ChatSourcePanel from '../../components/ChatSourcePanel/ChatSourcePanel';
 import classes from './ChatPage.module.css';
 
-const API_BASE_URL = 'http://localhost:8000/api/v1';
+import { API_BASE_URL } from '../../config';
 
 interface ChatSession {
   id: number;
@@ -18,8 +18,13 @@ interface ChatSession {
   created_at: string;
 }
 
+const parseUtcDate = (dateStr: string | null | undefined): Date => {
+  if (!dateStr) return new Date();
+  return new Date(dateStr.endsWith('Z') ? dateStr : dateStr + 'Z');
+};
+
 export default function ChatPage() {
-  const [opened, { toggle }] = useDisclosure();
+  const [opened, { toggle, close }] = useDisclosure();
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<number | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -33,6 +38,8 @@ export default function ChatPage() {
 
   // Track individual message feedback states (like/dislike)
   const [feedbacks, setFeedbacks] = useState<Record<string | number, any>>({});
+  // Track database IDs of created feedbacks to delete them if user undoes/changes rating
+  const [feedbackDbIds, setFeedbackDbIds] = useState<Record<string | number, number>>({});
 
   const viewportRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -95,9 +102,12 @@ export default function ChatPage() {
   // Select and load chat session messages
   const selectSession = async (sessionId: number, authToken = token) => {
     if (!authToken) return;
+    close();
     setActiveSessionId(sessionId);
     setSearchParams({ session_id: String(sessionId) }, { replace: true });
     setMessages([]);
+    setFeedbacks({});
+    setFeedbackDbIds({});
     setErrorMsg('');
 
     try {
@@ -116,6 +126,20 @@ export default function ChatPage() {
           sources: m.sources || []
         }));
         setMessages(formattedMessages);
+
+        // Populate initial feedbacks and feedbackDbIds from messages
+        const initialFeedbacks: Record<string | number, any> = {};
+        const initialFeedbackDbIds: Record<string | number, number> = {};
+        data.messages.forEach((m: any) => {
+          if (m.feedback_rating) {
+            initialFeedbacks[m.id] = m.feedback_rating === 'Helpful' ? 'like' : 'dislike';
+          }
+          if (m.feedback_id) {
+            initialFeedbackDbIds[m.id] = m.feedback_id;
+          }
+        });
+        setFeedbacks(initialFeedbacks);
+        setFeedbackDbIds(initialFeedbackDbIds);
       } else {
         setErrorMsg('Sohbet içeriği yüklenemedi.');
       }
@@ -127,6 +151,7 @@ export default function ChatPage() {
   // Create a new chat session
   const createNewSession = async (authToken = token) => {
     if (!authToken) return;
+    close();
     setErrorMsg('');
 
     let universityId = null;
@@ -160,6 +185,8 @@ export default function ChatPage() {
         setActiveSessionId(data.session_id);
         setSearchParams({ session_id: String(data.session_id) }, { replace: true });
         setMessages([]);
+        setFeedbacks({});
+        setFeedbackDbIds({});
       }
     } catch (err) {
       setErrorMsg('Yeni sohbet odası oluşturulamadı.');
@@ -199,9 +226,9 @@ export default function ChatPage() {
 
       if (res.ok) {
         const data = await res.json();
-        // Backend returns MessageResponse: { question, answer, university_id, sources }
+        // Backend returns MessageResponse: { id, question, answer, university_id, sources }
         const newAiMsg: Message = {
-          id: Date.now() + 1,
+          id: data.id || (Date.now() + 1),
           role: 'assistant',
           content: data.answer,
           created_at: new Date().toISOString(),
@@ -232,28 +259,134 @@ export default function ChatPage() {
     }
   };
 
-  const handleThumbUp = (msgId: string | number, e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleThumbUp = async (msgId: string | number, e: React.MouseEvent<HTMLButtonElement>) => {
+    const alreadyLiked = feedbacks[msgId] === 'like';
+
     setFeedbacks(prev => ({
       ...prev,
-      [msgId]: prev[msgId] === 'like' ? null : 'like'
+      [msgId]: alreadyLiked ? null : 'like'
     }));
+    
     gsap.to(e.currentTarget, {
       rotationY: '+=360',
       duration: 0.6,
       ease: 'power2.out'
     });
+
+    // Case 1: Toggling off (undoing like) -> DELETE the record
+    if (alreadyLiked) {
+      const dbId = feedbackDbIds[msgId];
+      if (dbId) {
+        try {
+          await fetch(`${API_BASE_URL}/feedbacks/chat-feedback/${dbId}`, { method: 'DELETE' });
+          setFeedbackDbIds(prev => {
+            const copy = { ...prev };
+            delete copy[msgId];
+            return copy;
+          });
+        } catch (err) {
+          console.error('Error undoing thumb up:', err);
+        }
+      }
+      return;
+    }
+
+    // Case 2: Creating a new like or switching from dislike -> POST (backend updates/upserts automatically)
+    const msgIndex = messages.findIndex(m => m.id === msgId);
+    if (msgIndex === -1) return;
+    const aiMessage = messages[msgIndex];
+    const userMessage = msgIndex > 0 ? messages[msgIndex - 1] : null;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/feedbacks/chat-feedback`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message_id: msgId,
+          user_question: userMessage ? userMessage.content : 'Soru bulunamadı.',
+          ai_response: aiMessage.content,
+          rating: 'Helpful',
+          comment: null
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setFeedbackDbIds(prev => ({
+          ...prev,
+          [msgId]: data.id
+        }));
+      }
+    } catch (err) {
+      console.error('Error sending thumb up feedback:', err);
+    }
   };
 
-  const handleThumbDown = (msgId: string | number, e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleThumbDown = async (msgId: string | number, e: React.MouseEvent<HTMLButtonElement>) => {
+    const alreadyDisliked = feedbacks[msgId] === 'dislike';
+
     setFeedbacks(prev => ({
       ...prev,
-      [msgId]: prev[msgId] === 'dislike' ? null : 'dislike'
+      [msgId]: alreadyDisliked ? null : 'dislike'
     }));
+
     gsap.to(e.currentTarget, {
       rotationY: '+=360',
       duration: 0.6,
       ease: 'power2.out'
     });
+
+    // Case 1: Toggling off (undoing dislike) -> DELETE the record
+    if (alreadyDisliked) {
+      const dbId = feedbackDbIds[msgId];
+      if (dbId) {
+        try {
+          await fetch(`${API_BASE_URL}/feedbacks/chat-feedback/${dbId}`, { method: 'DELETE' });
+          setFeedbackDbIds(prev => {
+            const copy = { ...prev };
+            delete copy[msgId];
+            return copy;
+          });
+        } catch (err) {
+          console.error('Error undoing thumb down:', err);
+        }
+      }
+      return;
+    }
+
+    // Case 2: Creating a new dislike or switching from like -> POST (backend updates/upserts automatically)
+    const comment = prompt("Bu yanıtı neden beğenmediğinizi kısaca açıklayabilirsiniz (İsteğe bağlı):");
+
+    const msgIndex = messages.findIndex(m => m.id === msgId);
+    if (msgIndex === -1) return;
+    const aiMessage = messages[msgIndex];
+    const userMessage = msgIndex > 0 ? messages[msgIndex - 1] : null;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/feedbacks/chat-feedback`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message_id: msgId,
+          user_question: userMessage ? userMessage.content : 'Soru bulunamadı.',
+          ai_response: aiMessage.content,
+          rating: 'Not Helpful',
+          comment: comment || null
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setFeedbackDbIds(prev => ({
+          ...prev,
+          [msgId]: data.id
+        }));
+      }
+    } catch (err) {
+      console.error('Error sending thumb down feedback:', err);
+    }
   };
 
   const handleOpenSource = (source: any) => {
@@ -360,7 +493,7 @@ export default function ChatPage() {
                 <Group gap="xs" style={{ flex: 1, minWidth: 0 }} wrap="nowrap">
                   <IconMessageCircle size={18} style={{ flexShrink: 0 }} />
                   <Text size="sm" truncate>
-                    {s.title || `Sohbet #${s.id} (${new Date(s.created_at).toLocaleDateString('tr-TR')})`}
+                    {s.title || `Sohbet #${s.id} (${parseUtcDate(s.created_at).toLocaleDateString('tr-TR')})`}
                   </Text>
                 </Group>
                 <ActionIcon
@@ -397,7 +530,7 @@ export default function ChatPage() {
       <AppShell.Main className={classes.mainContent}>
         {/* Mobile Header */}
         <Group h={60} px="md" hiddenFrom="sm" className={classes.mobileHeader}>
-          <Burger opened={opened} onClick={toggle} size="sm" />
+          <Burger opened={opened} onClick={toggle} size="sm" color="dark" />
           <Text fw={700}>UniLex</Text>
         </Group>
 

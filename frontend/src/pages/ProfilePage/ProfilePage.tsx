@@ -8,11 +8,12 @@ import ProfileSettings from '../../components/ProfileSettings/ProfileSettings';
 import ProfileHistoryList from '../../components/ProfileHistoryList/ProfileHistoryList';
 import classes from './ProfilePage.module.css';
 
-const API_BASE_URL = 'http://localhost:8000/api/v1';
+import { API_BASE_URL } from '../../config';
 
 interface ChatSession {
   id: number;
   university_id?: number;
+  title?: string | null;
   created_at: string;
 }
 
@@ -21,6 +22,9 @@ interface UserProfile {
   email: string;
   full_name: string;
   university_id?: number;
+  avatar_url?: string;
+  history_saved: boolean;
+  anonymized: boolean;
 }
 
 export default function ProfilePage() {
@@ -30,15 +34,16 @@ export default function ProfilePage() {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [token, setToken] = useState<string | null>(null);
 
-  // Read initial states from localStorage or fallback
-  const [historySaved, setHistorySaved] = useState(() => {
-    const saved = localStorage.getItem('historySaved');
-    return saved !== 'false';
-  });
-  const [anonymized, setAnonymized] = useState(() => {
-    const anon = localStorage.getItem('anonymized');
-    return anon === 'true';
-  });
+  const [historySaved, setHistorySaved] = useState(true);
+  const [anonymized, setAnonymized] = useState(false);
+
+  // Initialize toggles when user profile loaded
+  useEffect(() => {
+    if (user) {
+      setHistorySaved(user.history_saved);
+      setAnonymized(user.anonymized);
+    }
+  }, [user]);
 
   const navigate = useNavigate();
 
@@ -80,10 +85,13 @@ export default function ProfilePage() {
     })
       .then(res => res.json())
       .then(data => {
-        setUniversities(data.map((uni: any) => ({
-          value: String(uni.id),
-          label: uni.name
-        })));
+        const filtered = data
+          .filter((uni: any) => uni.name === 'Işık Üniversitesi')
+          .map((uni: any) => ({
+            value: String(uni.id),
+            label: uni.name
+          }));
+        setUniversities(filtered);
       })
       .catch(err => console.error('Error fetching universities:', err));
 
@@ -99,14 +107,51 @@ export default function ProfilePage() {
 
   }, [navigate]);
 
-  // Persist local settings changes to localStorage
-  useEffect(() => {
-    localStorage.setItem('historySaved', String(historySaved));
-  }, [historySaved]);
+  const handleHistorySavedChange = async (val: boolean) => {
+    if (!token) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/users/me`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ history_saved: val })
+      });
+      if (res.ok) {
+        const updatedUser = await res.json();
+        setUser(updatedUser);
+        setHistorySaved(updatedUser.history_saved);
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        window.dispatchEvent(new Event('user-updated'));
+      }
+    } catch (err) {
+      console.error('Error updating history_saved:', err);
+    }
+  };
 
-  useEffect(() => {
-    localStorage.setItem('anonymized', String(anonymized));
-  }, [anonymized]);
+  const handleAnonymizedChange = async (val: boolean) => {
+    if (!token) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/users/me`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ anonymized: val })
+      });
+      if (res.ok) {
+        const updatedUser = await res.json();
+        setUser(updatedUser);
+        setAnonymized(updatedUser.anonymized);
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        window.dispatchEvent(new Event('user-updated'));
+      }
+    } catch (err) {
+      console.error('Error updating anonymized:', err);
+    }
+  };
 
   // Get user role based on email
   const getRole = (email: string) => {
@@ -184,8 +229,6 @@ export default function ProfilePage() {
   }
 
   const roleInfo = getRole(user.email);
-  const usedQueries = Math.min(sessions.length * 4, 50);
-  const capacityPercent = Math.round((usedQueries / 50) * 100);
 
   return (
     <div ref={containerRef} className={classes.profilePage}>
@@ -198,7 +241,8 @@ export default function ProfilePage() {
                 user={user}
                 roleInfo={roleInfo}
                 sessionsCount={sessions.length}
-                usedQueries={usedQueries}
+                token={token || ''}
+                onUserUpdate={setUser}
               />
               <ProfileSettings
                 user={user}
@@ -207,9 +251,9 @@ export default function ProfilePage() {
                 onUserUpdate={setUser}
                 onDeleteAccount={handleDeleteAccount}
                 historySaved={historySaved}
-                setHistorySaved={setHistorySaved}
+                setHistorySaved={handleHistorySavedChange}
                 anonymized={anonymized}
-                setAnonymized={setAnonymized}
+                setAnonymized={handleAnonymizedChange}
                 onUniversityChange={handleUniversityChange}
               />
             </Box>
@@ -221,8 +265,6 @@ export default function ProfilePage() {
               sessions={sessions}
               universities={universities}
               onOpenChat={handleOpenChat}
-              usedQueries={usedQueries}
-              capacityPercent={capacityPercent}
             />
           </Grid.Col>
         </Grid>

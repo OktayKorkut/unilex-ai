@@ -91,3 +91,32 @@
   background-color: rgba(0, 188, 212, 0.1) !important;
   color: #00bcd4 !important;
 }
+
+.mobileLink {
+  display: block;
+  padding: 12px 20px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1.1rem;
+  font-weight: 600;
+  transition: color 0.2s ease, background-color 0.2s ease;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.mobileLink:hover {
+  color: #00bcd4;
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.burger {
+  margin-right: 8px;
+}
+
+@media (max-width: 576px) {
+  .burger {
+    margin-right: 16px;
+  }
+}
+
+

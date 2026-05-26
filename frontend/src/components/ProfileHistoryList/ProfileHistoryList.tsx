@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Card, Box, Group, Title, TextInput, Text, Badge, Progress } from '@mantine/core';
-import { IconHistory, IconSearch, IconCpu } from '@tabler/icons-react';
+import { Card, Box, Group, Title, TextInput, Text, Badge } from '@mantine/core';
+import { IconHistory, IconSearch } from '@tabler/icons-react';
 import classes from '../../pages/ProfilePage/ProfilePage.module.css';
 
 interface ChatSession {
   id: number;
   university_id?: number;
+  title?: string | null;
   created_at: string;
 }
 
@@ -13,16 +14,17 @@ interface ProfileHistoryListProps {
   sessions: ChatSession[];
   universities: { value: string; label: string }[];
   onOpenChat: (id: number) => void;
-  usedQueries: number;
-  capacityPercent: number;
 }
+
+const parseUtcDate = (dateStr: string | null | undefined): Date => {
+  if (!dateStr) return new Date();
+  return new Date(dateStr.endsWith('Z') ? dateStr : dateStr + 'Z');
+};
 
 export default function ProfileHistoryList({
   sessions,
   universities,
   onOpenChat,
-  usedQueries,
-  capacityPercent,
 }: ProfileHistoryListProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -31,24 +33,21 @@ export default function ProfileHistoryList({
     const uniName = universities.find((u) => u.value === String(session.university_id))?.label || 'Işık Üniversitesi';
     return {
       id: session.id,
-      date: new Date(session.created_at).toLocaleString('tr-TR', {
+      date: parseUtcDate(session.created_at).toLocaleString('tr-TR', {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
       }),
-      title: `Sohbet #${session.id}`,
+      title: session.title || `Sohbet #${session.id}`,
       description: `${uniName} mevzuatı hakkında RAG tabanlı soru-cevap oturumu.`,
       tags: ['Mevzuat', 'Akademik', uniName.split(' ')[0]],
     };
   });
 
-  const filteredChats = formattedChats.filter(
-    (chat) =>
-      chat.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      chat.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      chat.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+  const filteredChats = formattedChats.filter((chat) =>
+    chat.title.toLocaleLowerCase('tr-TR').includes(searchQuery.toLocaleLowerCase('tr-TR'))
   );
 
   return (
@@ -130,26 +129,6 @@ export default function ProfileHistoryList({
         </Box>
       </Box>
 
-      {/* Progress Capacity at the very bottom */}
-      <Box className={classes.capacityContainer}>
-        <Group justify="space-between" mb="xs">
-          <Text size="sm" fw={600} c="white" className={classes.capacityTitle}>
-            <IconCpu size={16} color="#00bcd4" />
-            Haftalık Analiz Kapasitesi
-          </Text>
-          <Text size="sm" fw={700} c="cyan" className={classes.monoFont}>
-            {usedQueries} / 50 Sorgu Kullanıldı ({capacityPercent}%)
-          </Text>
-        </Group>
-        <Progress
-          value={capacityPercent}
-          color="cyan"
-          size="md"
-          radius="xl"
-          bg="rgba(255,255,255,0.05)"
-          className={classes.glowBar}
-        />
-      </Box>
     </Card>
   );
 }

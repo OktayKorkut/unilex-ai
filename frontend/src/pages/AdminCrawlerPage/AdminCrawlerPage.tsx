@@ -1,11 +1,12 @@
-import { AppShell, Group, Text, Paper, Badge, ThemeIcon, ActionIcon, Button, Stack, Container, Progress, Select, Box, Loader, Alert } from '@mantine/core';
-import { IconSpider, IconSearch, IconBell, IconUpload, IconFileText, IconRefresh, IconAlertCircle, IconServer } from '@tabler/icons-react';
+import { AppShell, Group, Text, Paper, Badge, ThemeIcon, Button, Stack, Container, Progress, Select, Box, Loader, Alert, Burger } from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
+import { IconSpider, IconUpload, IconFileText, IconRefresh, IconAlertCircle, IconServer } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
 import AdminSidebar from '../../components/AdminSidebar/AdminSidebar';
 import classes from './AdminCrawlerPage.module.css';
 
-const API_BASE_URL = 'http://localhost:8000/api/v1';
+import { API_BASE_URL } from '../../config';
 
 interface UniversityOption {
   value: string;
@@ -22,7 +23,13 @@ interface CrawlStatusResponse {
   crawl_error: string | null;
 }
 
+const parseUtcDate = (dateStr: string | null | undefined): Date => {
+  if (!dateStr) return new Date();
+  return new Date(dateStr.endsWith('Z') ? dateStr : dateStr + 'Z');
+};
+
 export default function AdminCrawlerPage() {
+  const [opened, { toggle, close }] = useDisclosure(false);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -58,10 +65,12 @@ export default function AdminCrawlerPage() {
       fetch(`${API_BASE_URL}/universities`)
         .then(res => res.json())
         .then(data => {
-          const list = data.map((uni: any) => ({
-            value: String(uni.id),
-            label: uni.name
-          }));
+          const list = data
+            .filter((uni: any) => uni.name === 'Işık Üniversitesi')
+            .map((uni: any) => ({
+              value: String(uni.id),
+              label: uni.name
+            }));
           setUniversities(list);
           if (list.length > 0) {
             setSelectedUni(list[0].value);
@@ -179,6 +188,14 @@ export default function AdminCrawlerPage() {
     }
   };
 
+  const [uploadLoading, setUploadLoading] = useState(false);
+
+  const handleDragZoneClick = () => {
+    if (!uploadLoading) {
+      fileInputRef.current?.click();
+    }
+  };
+
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(true);
@@ -202,36 +219,76 @@ export default function AdminCrawlerPage() {
     }
   };
 
-  const handleUploadClick = () => {
-    setUploadStatus({
-      type: 'error',
-      message: 'PDF yükleme servisi backend entegrasyonu sonrasında aktif olacaktır. Mevcut backend sürümü doğrudan web tarama (crawler) altyapısını desteklemektedir.'
-    });
-    // Auto-clear upload notification after 6 seconds
-    setTimeout(() => {
-      setUploadStatus({ type: null, message: '' });
-    }, 6000);
+  const handleUploadFile = async () => {
+    if (!uploadedFile || !selectedUni) return;
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    setUploadLoading(true);
+    setUploadStatus({ type: null, message: '' });
+
+    const formData = new FormData();
+    formData.append('file', uploadedFile);
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/universities/${selectedUni}/upload-pdf`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setUploadStatus({
+          type: 'success',
+          message: 'Belge başarıyla yüklendi ve Qdrant vektör tabanında indekslendi.'
+        });
+        setUploadedFile(null);
+        fetchCrawlStatus(selectedUni);
+      } else {
+        setUploadStatus({
+          type: 'error',
+          message: data.detail || 'Belge yüklenirken bir hata oluştu.'
+        });
+      }
+    } catch (err) {
+      setUploadStatus({
+        type: 'error',
+        message: 'Sunucuyla bağlantı kurulamadı.'
+      });
+    } finally {
+      setUploadLoading(false);
+      // Auto-clear success notification after 5 seconds
+      setTimeout(() => {
+        setUploadStatus(prev => prev.type === 'success' ? { type: null, message: '' } : prev);
+      }, 5000);
+    }
   };
+
 
   return (
     <AppShell
-      navbar={{ width: 280, breakpoint: 'sm' }}
-      padding="xl"
+      navbar={{
+        width: 280,
+        breakpoint: 'sm',
+        collapsed: { mobile: !opened }
+      }}
+      padding={{ base: 'md', sm: 'xl' }}
       bg="gray.0"
     >
       {/* SIDEBAR Component */}
-      <AdminSidebar activePage="crawler" />
+      <AdminSidebar activePage="crawler" onClose={close} />
 
       <AppShell.Main>
         {/* HEADER */}
         <Group justify="space-between" mb="xl">
           <Group>
+            <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" color="dark" />
             <Text size="xl" fw={800}>Doküman Yükleme & Crawler</Text>
-            <Badge color="cyan" variant="light" size="lg" radius="sm">RAG Eğitim Modülü</Badge>
-          </Group>
-          <Group>
-            <ActionIcon variant="light" color="gray" size="lg" radius="md"><IconSearch size={20} /></ActionIcon>
-            <ActionIcon variant="light" color="gray" size="lg" radius="md"><IconBell size={20} /></ActionIcon>
+            <Badge color="cyan" variant="light" size="lg" radius="sm" visibleFrom="xs">RAG Eğitim Modülü</Badge>
           </Group>
         </Group>
 
@@ -259,14 +316,19 @@ export default function AdminCrawlerPage() {
             </Text>
 
             {uploadStatus.type && (
-              <Alert icon={<IconAlertCircle size={16} />} title="Entegrasyon Uyarısı" color="red" mb="md">
+              <Alert 
+                icon={<IconAlertCircle size={16} />} 
+                title={uploadStatus.type === 'success' ? 'Başarılı' : 'Hata'} 
+                color={uploadStatus.type === 'success' ? 'teal' : 'red'} 
+                mb="md"
+              >
                 {uploadStatus.message}
               </Alert>
             )}
 
             {/* DRAG AND DROP ZONE */}
             <div
-              onClick={handleUploadClick}
+              onClick={handleDragZoneClick}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
@@ -296,7 +358,16 @@ export default function AdminCrawlerPage() {
                   </ThemeIcon>
                   <Text fw={700} size="md" c="dark">{uploadedFile.name}</Text>
                   <Text size="xs" c="dimmed">{(uploadedFile.size / 1024 / 1024).toFixed(2)} MB</Text>
-                  <Button mt="xs" color="cyan" size="sm" onClick={(e) => { e.stopPropagation(); handleUploadClick(); }} leftSection={<IconRefresh size={14} />}>Sisteme Yükle ve Tara</Button>
+                  <Button 
+                    mt="xs" 
+                    color="cyan" 
+                    size="sm" 
+                    loading={uploadLoading}
+                    onClick={(e) => { e.stopPropagation(); handleUploadFile(); }} 
+                    leftSection={<IconRefresh size={14} />}
+                  >
+                    Sisteme Yükle ve Tara
+                  </Button>
                 </Stack>
               )}
             </div>
@@ -340,7 +411,7 @@ export default function AdminCrawlerPage() {
                   </Text>
                   {crawlStatus.crawled_at && (
                     <Text size="xs" c="dimmed">
-                      Son Başarılı Tarama: {new Date(crawlStatus.crawled_at).toLocaleString('tr-TR')}
+                      Son Başarılı Tarama: {parseUtcDate(crawlStatus.crawled_at).toLocaleString('tr-TR')}
                     </Text>
                   )}
                   {crawlStatus.crawl_error && (

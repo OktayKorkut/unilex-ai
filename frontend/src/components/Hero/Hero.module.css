@@ -13,7 +13,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-image: 
+  background-image:
     linear-gradient(rgba(0, 188, 212, 0.05) 1px, transparent 1px),
     linear-gradient(90deg, rgba(0, 188, 212, 0.05) 1px, transparent 1px);
   background-size: 40px 40px;
@@ -21,12 +21,20 @@
   z-index: 0;
   animation: gridMove 20s linear infinite;
   mask-image: radial-gradient(circle at center, black 30%, transparent 80%);
-  -webkit-mask-image: radial-gradient(circle at center, black 30%, transparent 80%);
+  -webkit-mask-image: radial-gradient(
+    circle at center,
+    black 30%,
+    transparent 80%
+  );
 }
 
 @keyframes gridMove {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(40px); }
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(40px);
+  }
 }
 
 /* Pulsing Center Glow - Green/Emerald */
@@ -39,7 +47,11 @@
   height: 60vw;
   max-width: 800px;
   max-height: 800px;
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.2) 0%, rgba(0, 0, 0, 0) 60%);
+  background: radial-gradient(
+    circle,
+    rgba(16, 185, 129, 0.2) 0%,
+    rgba(0, 0, 0, 0) 60%
+  );
   z-index: 1;
   border-radius: 50%;
   animation: pulseGlow 5s ease-in-out infinite alternate;
@@ -52,7 +64,11 @@
   left: 30%;
   width: 40vw;
   height: 40vw;
-  background: radial-gradient(circle, rgba(139, 92, 246, 0.25) 0%, rgba(0, 0, 0, 0) 60%);
+  background: radial-gradient(
+    circle,
+    rgba(139, 92, 246, 0.25) 0%,
+    rgba(0, 0, 0, 0) 60%
+  );
   z-index: 1;
   border-radius: 50%;
   animation: floatGlow 10s ease-in-out infinite alternate;
@@ -65,10 +81,15 @@
   right: 20%;
   width: 50vw;
   height: 50vw;
-  background: radial-gradient(circle, rgba(6, 182, 212, 0.15) 0%, rgba(0, 0, 0, 0) 60%);
+  background: radial-gradient(
+    circle,
+    rgba(6, 182, 212, 0.15) 0%,
+    rgba(0, 0, 0, 0) 60%
+  );
   z-index: 1;
   border-radius: 50%;
   animation: floatGlowReverse 12s ease-in-out infinite alternate;
+  -webkit-animation: floatGlowReverse 12s ease-in-out infinite alternate;
 }
 
 /* Animated Tech Rings */
@@ -80,12 +101,14 @@
   height: 50vw;
   max-width: 600px;
   max-height: 600px;
-  border: 1px solid rgba(16, 185, 129, 0.3); /* Green ring */
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  /*Greenring*/
   border-radius: 50%;
   transform: translate(-50%, -50%);
   animation: rotateRing 20s linear infinite;
   z-index: 1;
   box-shadow: inset 0 0 20px rgba(16, 185, 129, 0.1);
+  -webkit-animation: rotateRing 20s linear infinite;
 }
 
 .ring2 {
@@ -104,44 +127,58 @@
 }
 
 @keyframes pulseGlow {
-  0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.6; }
-  100% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+  0% {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 1;
+  }
 }
 
 @keyframes floatGlow {
-  0% { transform: translate(0, 0); }
-  100% { transform: translate(20%, 30%); }
+  0% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(20%, 30%);
+  }
 }
 
 @keyframes floatGlowReverse {
-  0% { transform: translate(0, 0); }
-  100% { transform: translate(-30%, -20%); }
+  0% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(-30%, -20%);
+  }
 }
 
 @keyframes rotateRing {
-  0% { 
-    transform: translate(-50%, -50%) rotate(0deg); 
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
     border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
   }
-  50% { 
+  50% {
     border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%;
   }
-  100% { 
-    transform: translate(-50%, -50%) rotate(360deg); 
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
     border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
   }
 }
 
 @keyframes rotateRingReverse {
-  0% { 
-    transform: translate(-50%, -50%) rotate(360deg); 
+  0% {
+    transform: translate(-50%, -50%) rotate(360deg);
     border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
   }
-  50% { 
+  50% {
     border-radius: 70% 30% 50% 50% / 30% 30% 70% 70%;
   }
-  100% { 
-    transform: translate(-50%, -50%) rotate(0deg); 
+  100% {
+    transform: translate(-50%, -50%) rotate(0deg);
     border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
   }
 }
@@ -183,7 +220,9 @@
 }
 
 .actionBtn {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .actionBtn:hover {

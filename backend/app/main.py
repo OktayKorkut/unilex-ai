@@ -27,8 +27,17 @@ async def lifespan(app: FastAPI):
     stop_scheduler()
 
 
+import os
+from fastapi.staticfiles import StaticFiles
+
+# Ensure static directories exist
+static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
+avatars_dir = os.path.join(static_dir, "avatars")
+os.makedirs(avatars_dir, exist_ok=True)
+
 app = FastAPI(title=settings.APP_NAME, version="0.1.0", lifespan=lifespan)
 
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 add_exception_handler(app)
 

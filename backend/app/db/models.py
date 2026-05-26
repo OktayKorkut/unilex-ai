@@ -64,6 +64,15 @@ class Message(Base):
     sources: Mapped[list | None] = mapped_column(JSON, nullable=True)
 
     session: Mapped["ChatSession"] = relationship(back_populates="messages")
+    feedback: Mapped["Feedback | None"] = relationship(back_populates="chat_message", cascade="all, delete-orphan", uselist=False)
+
+    @property
+    def feedback_rating(self) -> str | None:
+        return self.feedback.rating if self.feedback else None
+
+    @property
+    def feedback_id(self) -> int | None:
+        return self.feedback.id if self.feedback else None
 
 
 class Document(Base):
@@ -83,7 +92,29 @@ class Feedback(Base):
     __tablename__ = "feedbacks"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    full_name: Mapped[str] = mapped_column(String(255))
-    email: Mapped[str] = mapped_column(String(255))
+    full_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    
+    # Yeni geri bildirim alanları (asistan yanıt değerlendirmeleri için)
+    user_question: Mapped[str | None] = mapped_column(Text, nullable=True)
+    ai_response: Mapped[str | None] = mapped_column(Text, nullable=True)
+    rating: Mapped[str | None] = mapped_column(String(20), nullable=True)  # "Helpful" | "Not Helpful"
+    comment: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    message_id: Mapped[int | None] = mapped_column(ForeignKey("messages.id", ondelete="CASCADE"), nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    chat_message: Mapped["Message | None"] = relationship(back_populates="feedback")
+
+
+class SystemLog(Base):
+    __tablename__ = "system_logs"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    level: Mapped[str] = mapped_column(String(20))  # "info" | "error" | "warning"
+    title: Mapped[str] = mapped_column(String(255))
     message: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+

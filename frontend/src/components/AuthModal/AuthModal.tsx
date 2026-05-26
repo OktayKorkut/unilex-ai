@@ -4,13 +4,12 @@ import { IconRobot, IconBrandGoogle, IconBrandGithub, IconAlertCircle } from '@t
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import classes from './AuthModal.module.css';
+import { API_BASE_URL } from '../../config';
 
 interface AuthModalProps {
   opened: boolean;
   onClose: () => void;
 }
-
-const API_BASE_URL = 'http://localhost:8000/api/v1';
 
 export default function AuthModal({ opened, onClose }: AuthModalProps) {
   const [type, setType] = useState<'login' | 'register'>('login');
