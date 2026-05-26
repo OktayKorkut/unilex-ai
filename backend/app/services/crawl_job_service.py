@@ -11,6 +11,7 @@ from app.db.models import University
 from app.crawler.university_crawler import UniversityCrawler
 from app.crawler.mevzuat_discovery import discover_mevzuat_url
 from app.rag.embedder import embed_university_documents
+from app.services.system_log_service import create_system_log
 
 logger = get_logger("crawl_job")
 
@@ -35,6 +36,8 @@ async def run_crawl_job(university_id: int) -> None:
             op.add_field("result", "not_found").fail(exc_info=False)
             return
 
+        create_system_log(db, "info", "Crawler Senkronizasyonu", f"{university.name} için web tarama (crawl) işlemi başlatıldı.")
+
         crawler = UniversityCrawler()
         result = await crawler.crawl(university, db)
         docs_added = result.get("documents_added", 0)
@@ -53,6 +56,7 @@ async def run_crawl_job(university_id: int) -> None:
                 db.commit()
                 result = await crawler.crawl(university, db)
                 op.add_field("retry_docs", result.get("documents_added", 0))
+                docs_added = result.get("documents_added", 0)
 
         chunks = embed_university_documents(university.id, db)
         op.add_field("chunks_embedded", chunks)
@@ -61,6 +65,8 @@ async def run_crawl_job(university_id: int) -> None:
         university.crawl_status = "done"
         university.crawl_error = None
         db.commit()
+        
+        create_system_log(db, "info", "Crawler Senkronizasyonu", f"{university.name} kütüphane veritabanı başarıyla güncellendi. ({docs_added} yeni belge eklendi)")
         op.succeed()
 
     except Exception as e:
@@ -72,6 +78,7 @@ async def run_crawl_job(university_id: int) -> None:
                 univ.crawl_status = "error"
                 univ.crawl_error = str(e)[:500]
                 db.commit()
+                create_system_log(db, "error", "Crawler Senkronizasyonu", f"{univ.name} tarama işleminde hata oluştu: {str(e)[:250]}")
         except Exception:
             pass
 
