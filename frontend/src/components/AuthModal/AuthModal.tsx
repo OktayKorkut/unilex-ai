@@ -12,7 +12,7 @@ interface AuthModalProps {
 }
 
 export default function AuthModal({ opened, onClose }: AuthModalProps) {
-  const [type, setType] = useState<'login' | 'register'>('login');
+  const [type, setType] = useState<'login' | 'register' | 'forgot'>('login');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -78,6 +78,30 @@ export default function AuthModal({ opened, onClose }: AuthModalProps) {
     setType((current) => (current === 'register' ? 'login' : 'register'));
     setErrorMsg('');
     setSuccessMsg('');
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+    setSuccessMsg('');
+    if (!email) {
+      setErrorMsg('Lütfen e-posta adresinizi girin.');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      setSuccessMsg(data.message || 'Şifre sıfırlama bağlantısı gönderildi.');
+    } catch {
+      setErrorMsg('Bir hata oluştu. Lütfen tekrar deneyin.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -208,7 +232,7 @@ export default function AuthModal({ opened, onClose }: AuthModalProps) {
             <div ref={shadowRef} className={classes.robotShadow}></div>
           </div>
           <Title order={3} c="white" mt={40} style={{ zIndex: 2 }} ta="center">
-            {type === 'login' ? 'Tekrar Hoş Geldiniz!' : 'Maceraya Katılın!'}
+            {type === 'login' ? 'Tekrar Hoş Geldiniz!' : type === 'register' ? 'Maceraya Katılın!' : 'Şifrenizi Sıfırlayın'}
           </Title>
           <Text c="cyan.1" size="sm" ta="center" mt="sm" style={{ zIndex: 2 }}>
             Üniversitelerin yapay zeka tabanlı ilk akademik asistanı.
@@ -216,74 +240,119 @@ export default function AuthModal({ opened, onClose }: AuthModalProps) {
         </Box>
 
         {/* Right Side - The Form */}
-        <Box className={classes.formSide} component="form" onSubmit={handleAuth}>
-          <Text size="xl" fw={800} mb="xl" c="dark.8">
-            {type === 'login' ? 'Giriş Yap' : 'Kayıt Ol'}
-          </Text>
+        {type === 'forgot' ? (
+          <Box className={classes.formSide} component="form" onSubmit={handleForgotPassword}>
+            <Text size="xl" fw={800} mb="xs" c="dark.8">Şifremi Unuttum</Text>
+            <Text size="sm" c="dimmed" mb="xl">E-posta adresinizi girin, sıfırlama bağlantısı gönderelim.</Text>
 
-          {errorMsg && (
-            <Alert variant="light" color="red" title="Hata" icon={<IconAlertCircle size={16} />} mb="md">
-              {errorMsg}
-            </Alert>
-          )}
+            {errorMsg && (
+              <Alert variant="light" color="red" title="Hata" icon={<IconAlertCircle size={16} />} mb="md">
+                {errorMsg}
+              </Alert>
+            )}
+            {successMsg && (
+              <Alert variant="light" color="green" title="Başarılı" mb="md">
+                {successMsg}
+              </Alert>
+            )}
 
-          {successMsg && (
-            <Alert variant="light" color="green" title="Başarılı" mb="md">
-              {successMsg}
-            </Alert>
-          )}
-
-          {type === 'register' && (
             <TextInput
-              label="Ad Soyad"
-              placeholder="Adınız Soyadınız"
+              label="E-posta Adresi"
+              placeholder="ornek@domain.com"
+              required
+              mb="xl"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+
+            <Button fullWidth radius="xl" color="cyan" size="md" type="submit" disabled={loading}>
+              {loading ? <Loader size="xs" color="white" /> : 'Sıfırlama Bağlantısı Gönder'}
+            </Button>
+
+            <Text ta="center" size="sm" c="dimmed" mt="xl">
+              <Anchor component="button" type="button" c="cyan" fw={700} onClick={() => { setType('login'); setErrorMsg(''); setSuccessMsg(''); }}>
+                Giriş ekranına dön
+              </Anchor>
+            </Text>
+          </Box>
+        ) : (
+          <Box className={classes.formSide} component="form" onSubmit={handleAuth}>
+            <Text size="xl" fw={800} mb="xl" c="dark.8">
+              {type === 'login' ? 'Giriş Yap' : 'Kayıt Ol'}
+            </Text>
+
+            {errorMsg && (
+              <Alert variant="light" color="red" title="Hata" icon={<IconAlertCircle size={16} />} mb="md">
+                {errorMsg}
+              </Alert>
+            )}
+
+            {successMsg && (
+              <Alert variant="light" color="green" title="Başarılı" mb="md">
+                {successMsg}
+              </Alert>
+            )}
+
+            {type === 'register' && (
+              <TextInput
+                label="Ad Soyad"
+                placeholder="Adınız Soyadınız"
+                required
+                mb="md"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+              />
+            )}
+
+            <TextInput
+              label="E-posta Adresi"
+              placeholder="ornek@domain.com"
               required
               mb="md"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
-          )}
 
-          <TextInput
-            label="E-posta Adresi"
-            placeholder="ornek@domain.com"
-            required
-            mb="md"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
+            <PasswordInput
+              label="Şifre"
+              placeholder="Parolanız"
+              required
+              mb={type === 'login' ? 'xs' : 'xl'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
 
-          <PasswordInput
-            label="Şifre"
-            placeholder="Parolanız"
-            required
-            mb="xl"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+            {type === 'login' && (
+              <Text ta="right" size="xs" mb="xl">
+                <Anchor component="button" type="button" c="cyan" onClick={() => { setType('forgot'); setErrorMsg(''); setSuccessMsg(''); }}>
+                  Şifremi unuttum
+                </Anchor>
+              </Text>
+            )}
 
-          <Button fullWidth radius="xl" color="cyan" size="md" type="submit" disabled={loading}>
-            {loading ? <Loader size="xs" color="white" /> : (type === 'login' ? 'Giriş Yap' : 'Hesap Oluştur')}
-          </Button>
-
-          <Divider label="Veya" labelPosition="center" my="xl" />
-
-          <Group grow mb="md">
-            <Button variant="default" radius="xl" leftSection={<IconBrandGoogle size={18} />}>
-              Google
+            <Button fullWidth radius="xl" color="cyan" size="md" type="submit" disabled={loading}>
+              {loading ? <Loader size="xs" color="white" /> : (type === 'login' ? 'Giriş Yap' : 'Hesap Oluştur')}
             </Button>
-            <Button variant="default" radius="xl" leftSection={<IconBrandGithub size={18} />}>
-              GitHub
-            </Button>
-          </Group>
 
-          <Text ta="center" size="sm" c="dimmed" mt="xl">
-            {type === 'login' ? 'Hesabınız yok mu?' : 'Zaten bir hesabınız var mı?'}
-            <Anchor component="button" type="button" c="cyan" fw={700} onClick={toggleType} ml={5}>
-              {type === 'login' ? 'Hemen Kayıt Olun' : 'Giriş Yapın'}
-            </Anchor>
-          </Text>
-        </Box>
+            <Divider label="Veya" labelPosition="center" my="xl" />
+
+            <Group grow mb="md">
+              <Button variant="default" radius="xl" leftSection={<IconBrandGoogle size={18} />}>
+                Google
+              </Button>
+              <Button variant="default" radius="xl" leftSection={<IconBrandGithub size={18} />}>
+                GitHub
+              </Button>
+            </Group>
+
+            <Text ta="center" size="sm" c="dimmed" mt="xl">
+              {type === 'login' ? 'Hesabınız yok mu?' : 'Zaten bir hesabınız var mı?'}
+              <Anchor component="button" type="button" c="cyan" fw={700} onClick={toggleType} ml={5}>
+                {type === 'login' ? 'Hemen Kayıt Olun' : 'Giriş Yapın'}
+              </Anchor>
+            </Text>
+          </Box>
+        )}
       </Flex>
     </Modal>
   );

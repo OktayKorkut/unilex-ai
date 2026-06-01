@@ -7,6 +7,7 @@ import AdminHealthPage from './pages/AdminHealthPage';
 import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 import ProfilePage from './pages/ProfilePage';
+import ResetPasswordPage from './pages/ResetPasswordPage/ResetPasswordPage';
 import Header from './components/Header/Header';
 import Footer from './components/Footer/Footer';
 import { Box } from '@mantine/core';
@@ -46,6 +47,7 @@ function App() {
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/admin/crawler" element={<AdminCrawlerPage />} />
         <Route path="/admin/health" element={<AdminHealthPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
       </Routes>
     </Router>
   )
