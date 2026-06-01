@@ -15,6 +15,36 @@ Görevin:
 
 Önemli: Bağlamda olmayan bilgileri uydurmak kesinlikle yasak."""
 
+SMALLTALK_SYSTEM = (
+    "Sen Unilex AI'sın, Türk üniversitelerinin mevzuat belgelerini analiz eden bir asistansın. "
+    "Kullanıcı sana günlük bir mesaj gönderiyor. Kısa ve samimi bir şekilde yanıt ver. "
+    "Üniversite mevzuatı hakkında soru sormaya davet et."
+)
+
+_SMALLTALK_KEYWORDS = frozenset({
+    "merhaba", "selam", "selamlar", "hey", "hi", "hello", "iyi günler",
+    "iyi akşamlar", "iyi geceler", "günaydın",
+    "nasılsın", "nasılsınız", "iyi misin", "ne haber", "naber", "ne var ne yok",
+    "teşekkür", "teşekkürler", "teşekkür ederim", "sağ ol", "sağ olun", "eyvallah",
+    "görüşürüz", "hoşçakal", "hoşça kal", "güle güle", "bay bay", "kendine iyi bak",
+    "tamam", "peki", "anladım", "harika", "süper",
+})
+
+_MEVZUAT_KEYWORDS = frozenset({
+    "yönetmelik", "yönerge", "statü", "madde", "fıkra", "burs", "staj",
+    "başvuru", "kayıt", "not", "puan", "mezun", "diploma", "lisans", "yüksek lisans",
+    "doktora", "çap", "yandal", "muafiyet", "sınav", "ödev", "disiplin",
+})
+
+
+def _is_smalltalk(question: str) -> bool:
+    q = question.lower().strip()
+    words = set(q.split())
+    has_smalltalk = bool(words & _SMALLTALK_KEYWORDS)
+    has_mevzuat = any(kw in q for kw in _MEVZUAT_KEYWORDS)
+    return has_smalltalk and not has_mevzuat
+
+
 RELEVANCE_THRESHOLD = 0.60
 
 
@@ -38,6 +68,19 @@ def ask(
     """
     op = logger.start_operation("ask")
     op.add_field("university_id", university_id).add_field("question_len", len(question))
+
+    if _is_smalltalk(question):
+        op.add_field("result", "smalltalk").succeed()
+        messages = [{"role": "system", "content": SMALLTALK_SYSTEM}]
+        messages += history[-4:]
+        messages.append({"role": "user", "content": question})
+        response = _get_openai().chat.completions.create(
+            model=settings.LLM_MODEL,
+            messages=messages,
+            temperature=0.7,
+            max_tokens=150,
+        )
+        return response.choices[0].message.content, [], False
 
     all_chunks = retrieve(query=question, university_id=university_id, top_k=10)
     op.add_field("chunks_retrieved", len(all_chunks))

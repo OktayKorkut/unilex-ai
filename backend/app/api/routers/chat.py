@@ -6,9 +6,9 @@ from typing import Optional
 import re
 
 from app.db.database import get_db
-from app.db.models import ChatSession, University, User
+from app.db.models import ChatSession, Message, University, User
 from app.api.deps import get_current_user
-from app.core.exceptions import SessionNotFoundError, UniversityNotFoundError
+from app.core.exceptions import MessageNotFoundError, SessionNotFoundError, UniversityNotFoundError
 from app.core.logger import get_logger
 from app.services.university_service import UniversityService
 from app.services.chat_service import ChatService
@@ -208,6 +208,69 @@ async def send_message(
     return {
         "id": assistant_msg_id,
         "question": content_to_process,
+        "answer": answer,
+        "university_id": session.university_id,
+        "sources": sources,
+        "session_title": session.title,
+    }
+
+
+@router.post("/sessions/{session_id}/messages/{message_id}/regenerate", response_model=MessageResponse)
+async def regenerate_message(
+    session_id: int,
+    message_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    op = logger.start_operation("regenerate_message")
+    op.add_field("session_id", session_id).add_field("message_id", message_id)
+
+    session = db.query(ChatSession).filter(
+        ChatSession.id == session_id,
+        ChatSession.user_id == current_user.id,
+    ).first()
+    if not session:
+        op.fail(exc_info=False)
+        raise SessionNotFoundError()
+
+    assistant_msg = db.query(Message).filter(
+        Message.id == message_id,
+        Message.session_id == session_id,
+        Message.role == "assistant",
+    ).first()
+    if not assistant_msg:
+        op.fail(exc_info=False)
+        raise MessageNotFoundError()
+
+    all_messages = (
+        db.query(Message)
+        .filter(Message.session_id == session_id)
+        .order_by(Message.created_at)
+        .all()
+    )
+
+    assistant_idx = next((i for i, m in enumerate(all_messages) if m.id == message_id), None)
+    if assistant_idx is None or assistant_idx == 0 or all_messages[assistant_idx - 1].role != "user":
+        op.fail(exc_info=False)
+        raise MessageNotFoundError()
+
+    user_msg = all_messages[assistant_idx - 1]
+    question = user_msg.content
+    history = [{"role": m.role, "content": m.content} for m in all_messages[:assistant_idx - 1]]
+
+    db.delete(assistant_msg)
+    db.commit()
+
+    answer, sources = await ChatService.answer_question(session, question, db, history=history)
+
+    new_msg = None
+    if current_user.history_saved:
+        new_msg = ChatService.save_assistant_message(session_id, answer, db, sources=sources)
+
+    op.add_field("university_id", session.university_id).add_field("sources", len(sources)).succeed()
+    return {
+        "id": new_msg.id if new_msg else None,
+        "question": question,
         "answer": answer,
         "university_id": session.university_id,
         "sources": sources,
