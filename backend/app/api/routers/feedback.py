@@ -1,11 +1,12 @@
 from datetime import datetime
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.orm import Session
 from app.db.database import get_db
-from app.db.models import Feedback
-from app.api.deps import get_current_admin
+from app.db.models import Feedback, User
+from app.api.deps import get_current_admin, get_current_user
+from app.api.routers.admin import Paginated
 
 router = APIRouter(tags=["feedbacks"])
 
@@ -55,7 +56,11 @@ def create_feedback(body: FeedbackCreate, db: Session = Depends(get_db)):
 
 
 @router.post("/feedbacks/chat-feedback", status_code=status.HTTP_201_CREATED, response_model=FeedbackResponse)
-def create_chat_feedback(body: ChatFeedbackCreate, db: Session = Depends(get_db)):
+def create_chat_feedback(
+    body: ChatFeedbackCreate,
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_user),
+):
     # Check if a feedback for this message_id already exists.
     existing_feedback = db.query(Feedback).filter(Feedback.message_id == body.message_id).first()
     if existing_feedback:
@@ -78,28 +83,38 @@ def create_chat_feedback(body: ChatFeedbackCreate, db: Session = Depends(get_db)
     return feedback
 
 
-@router.get("/admin/feedbacks", response_model=list[FeedbackResponse])
+@router.get("/admin/feedbacks", response_model=Paginated[FeedbackResponse])
 def get_feedbacks(
     db: Session = Depends(get_db),
     admin_user=Depends(get_current_admin),
+    limit: int = Query(10, ge=1, le=100),
+    offset: int = Query(0, ge=0),
 ):
-    # Retrieve only contact page feedbacks (where rating is null)
-    feedbacks = db.query(Feedback).filter(Feedback.rating.is_(None)).order_by(Feedback.created_at.desc()).all()
-    return feedbacks
+    q = db.query(Feedback).filter(Feedback.rating.is_(None)).order_by(Feedback.created_at.desc())
+    total = q.count()
+    items = q.offset(offset).limit(limit).all()
+    return Paginated(items=items, total=total, limit=limit, offset=offset)
 
 
-@router.get("/admin/bad-feedbacks", response_model=list[FeedbackResponse])
+@router.get("/admin/bad-feedbacks", response_model=Paginated[FeedbackResponse])
 def get_bad_feedbacks(
     db: Session = Depends(get_db),
     _admin=Depends(get_current_admin),
+    limit: int = Query(10, ge=1, le=100),
+    offset: int = Query(0, ge=0),
 ):
-    # Retrieve only "Not Helpful" feedbacks ordered by creation time descending
-    feedbacks = db.query(Feedback).filter(Feedback.rating == "Not Helpful").order_by(Feedback.created_at.desc()).all()
-    return feedbacks
+    q = db.query(Feedback).filter(Feedback.rating == "Not Helpful").order_by(Feedback.created_at.desc())
+    total = q.count()
+    items = q.offset(offset).limit(limit).all()
+    return Paginated(items=items, total=total, limit=limit, offset=offset)
 
 
 @router.delete("/feedbacks/chat-feedback/{feedback_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_chat_feedback(feedback_id: int, db: Session = Depends(get_db)):
+def delete_chat_feedback(
+    feedback_id: int,
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_user),
+):
     feedback = db.query(Feedback).filter(Feedback.id == feedback_id).first()
     if not feedback:
         raise HTTPException(
