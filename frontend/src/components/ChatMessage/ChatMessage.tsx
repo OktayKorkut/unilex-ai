@@ -1,5 +1,5 @@
 import React from 'react';
-import { Group, Text, Avatar, Paper, Badge, ThemeIcon, Image, Stack, ActionIcon } from '@mantine/core';
+import { Group, Text, Avatar, Paper, Badge, ThemeIcon, Image, Stack, ActionIcon, Anchor } from '@mantine/core';
 import { IconPaperclip, IconChevronRight, IconThumbUp, IconThumbDown, IconUser } from '@tabler/icons-react';
 import classes from './ChatMessage.module.css';
 
@@ -19,6 +19,15 @@ interface ChatMessageProps {
   onThumbDown: (msgId: string | number, e: React.MouseEvent<HTMLButtonElement>) => void;
   onOpenSource: (source: any) => void;
 }
+
+const renderWithLinks = (text: string) => {
+  const parts = text.split(/(https?:\/\/[^\s]+)/g);
+  return parts.map((p, i) =>
+    /^https?:\/\//.test(p)
+      ? <Anchor key={i} href={p} target="_blank" rel="noopener noreferrer" size="sm">{p}</Anchor>
+      : <span key={i}>{p}</span>
+  );
+};
 
 export default function ChatMessage({
   msg,
@@ -60,7 +69,7 @@ export default function ChatMessage({
           p="md"
           withBorder={isAssistant}
         >
-          <Text className={classes.messageText}>{msg.content}</Text>
+          <Text className={classes.messageText}>{renderWithLinks(msg.content)}</Text>
 
           {/* Source References */}
           {isAssistant && msg.sources && msg.sources.length > 0 && (
