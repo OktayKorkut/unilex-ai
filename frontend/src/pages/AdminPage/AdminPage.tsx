@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AppShell, Group, Text, Paper, SimpleGrid, Badge, ThemeIcon, Divider, ActionIcon, Box, Loader, Alert, Avatar, Burger, Table } from '@mantine/core';
+import { AppShell, Group, Text, Paper, SimpleGrid, Badge, ThemeIcon, Divider, ActionIcon, Box, Loader, Alert, Avatar, Burger, Table, Pagination } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { IconActivity, IconCheck, IconAlertCircle, IconInfoCircle, IconUsers, IconSchool, IconFileText, IconMessage } from '@tabler/icons-react';
 import AdminSidebar from '../../components/AdminSidebar/AdminSidebar';
+import { SystemLoadChart, type LoadHistoryPoint } from './SystemLoadChart';
 import classes from './AdminPage.module.css';
 
 import { API_BASE_URL } from '../../config';
@@ -44,15 +45,22 @@ const parseUtcDate = (dateStr: string | null | undefined): Date => {
   return new Date(dateStr.endsWith('Z') ? dateStr : dateStr + 'Z');
 };
 
+const PAGE_SIZE = 10;
+
 export default function AdminPage() {
   const [opened, { toggle, close }] = useDisclosure(false);
   const [stats, setStats] = useState<StatsData | null>(null);
   const [feedbacks, setFeedbacks] = useState<FeedbackData[]>([]);
+  const [feedbacksTotal, setFeedbacksTotal] = useState(0);
+  const [feedbacksPage, setFeedbacksPage] = useState(1);
   const [logs, setLogs] = useState<SystemLog[]>([]);
   const [badFeedbacks, setBadFeedbacks] = useState<BadFeedback[]>([]);
+  const [badFeedbacksTotal, setBadFeedbacksTotal] = useState(0);
+  const [badFeedbacksPage, setBadFeedbacksPage] = useState(1);
+  const [loadHistory, setLoadHistory] = useState<LoadHistoryPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -72,7 +80,7 @@ export default function AdminPage() {
         return;
       }
       
-      // Fetch stats, feedbacks, logs and bad feedbacks
+      // Fetch stats, logs, and load-history on initial load
       Promise.all([
         fetch(`${API_BASE_URL}/admin/stats`, {
           headers: { 'Authorization': `Bearer ${token}` }
@@ -81,30 +89,20 @@ export default function AdminPage() {
           if (res.status === 403) throw new Error('Yönetici yetkiniz bulunmamaktadır.');
           throw new Error('İstatistikler yüklenirken bir hata oluştu.');
         }),
-        fetch(`${API_BASE_URL}/admin/feedbacks`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        }).then(res => {
-          if (res.ok) return res.json();
-          throw new Error('Geri bildirimler yüklenirken bir hata oluştu.');
-        }),
-        fetch(`${API_BASE_URL}/admin/logs`, {
+        fetch(`${API_BASE_URL}/admin/logs?limit=15&offset=0`, {
           headers: { 'Authorization': `Bearer ${token}` }
         }).then(res => {
           if (res.ok) return res.json();
           throw new Error('Sistem logları yüklenirken bir hata oluştu.');
         }),
-        fetch(`${API_BASE_URL}/admin/bad-feedbacks`, {
+        fetch(`${API_BASE_URL}/admin/load-history`, {
           headers: { 'Authorization': `Bearer ${token}` }
-        }).then(res => {
-          if (res.ok) return res.json();
-          throw new Error('Hatalı yanıt geri bildirimleri yüklenirken bir hata oluştu.');
-        })
+        }).then(res => res.ok ? res.json() : []),
       ])
-        .then(([statsData, feedbacksData, logsData, badFeedbacksData]) => {
+        .then(([statsData, logsData, loadHistoryData]) => {
           setStats(statsData);
-          setFeedbacks(feedbacksData);
-          setLogs(logsData);
-          setBadFeedbacks(badFeedbacksData);
+          setLogs(logsData.items ?? logsData);
+          setLoadHistory(loadHistoryData);
           setLoading(false);
         })
         .catch(err => {
@@ -116,6 +114,26 @@ export default function AdminPage() {
       navigate('/');
     }
   }, [navigate]);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    fetch(`${API_BASE_URL}/admin/feedbacks?limit=${PAGE_SIZE}&offset=${(feedbacksPage - 1) * PAGE_SIZE}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(res => res.ok ? res.json() : { items: [], total: 0 })
+      .then(data => { setFeedbacks(data.items ?? []); setFeedbacksTotal(data.total ?? 0); });
+  }, [feedbacksPage]);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    fetch(`${API_BASE_URL}/admin/bad-feedbacks?limit=${PAGE_SIZE}&offset=${(badFeedbacksPage - 1) * PAGE_SIZE}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(res => res.ok ? res.json() : { items: [], total: 0 })
+      .then(data => { setBadFeedbacks(data.items ?? []); setBadFeedbacksTotal(data.total ?? 0); });
+  }, [badFeedbacksPage]);
 
   return (
     <AppShell
@@ -192,6 +210,8 @@ export default function AdminPage() {
               </Paper>
             </SimpleGrid>
 
+            {/* LOAD HISTORY CHART */}
+            <SystemLoadChart data={loadHistory} />
 
             {/* BOTTOM ROW */}
             <SimpleGrid cols={{ base: 1, lg: 2 }} spacing="lg">
@@ -199,7 +219,7 @@ export default function AdminPage() {
               <Paper withBorder p="xl" radius="md" bg="white" className={classes.feedbackContainer}>
                 <Group justify="space-between" mb="xl">
                   <Text fw={700}>Kullanıcı Geri Bildirimleri</Text>
-                  <Badge color="cyan" variant="light">{feedbacks.length} Mesaj</Badge>
+                  <Badge color="cyan" variant="light">{feedbacksTotal} Mesaj</Badge>
                 </Group>
 
                 <div className={classes.feedbackScrollArea}>
@@ -232,6 +252,15 @@ export default function AdminPage() {
                     ))
                   )}
                 </div>
+                {feedbacksTotal > PAGE_SIZE && (
+                  <Pagination
+                    total={Math.ceil(feedbacksTotal / PAGE_SIZE)}
+                    value={feedbacksPage}
+                    onChange={setFeedbacksPage}
+                    size="sm"
+                    mt="md"
+                  />
+                )}
               </Paper>
 
               {/* Logs */}
@@ -288,12 +317,13 @@ export default function AdminPage() {
             <Paper withBorder p="xl" radius="md" bg="white" mt="lg">
               <Group justify="space-between" mb="lg">
                 <Text fw={700} size="lg">Hatalı Yanıt Geri Bildirimleri (Thumbs Down)</Text>
-                <Badge color="red" variant="light">{badFeedbacks.length} Adet</Badge>
+                <Badge color="red" variant="light">{badFeedbacksTotal} Adet</Badge>
               </Group>
               
               {badFeedbacks.length === 0 ? (
                 <Text size="sm" c="dimmed" ta="center" py="xl">Henüz olumsuz değerlendirilmiş bir asistan yanıtı yok.</Text>
               ) : (
+                <>
                 <Box style={{ overflowX: 'auto' }}>
                   <Table striped highlightOnHover>
                     <Table.Thead>
@@ -330,6 +360,16 @@ export default function AdminPage() {
                     </Table.Tbody>
                   </Table>
                 </Box>
+                {badFeedbacksTotal > PAGE_SIZE && (
+                  <Pagination
+                    total={Math.ceil(badFeedbacksTotal / PAGE_SIZE)}
+                    value={badFeedbacksPage}
+                    onChange={setBadFeedbacksPage}
+                    size="sm"
+                    mt="md"
+                  />
+                )}
+                </>
               )}
             </Paper>
           </>

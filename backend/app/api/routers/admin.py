@@ -1,16 +1,27 @@
-from fastapi import APIRouter, Depends, HTTPException, Response, status
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from pydantic import BaseModel, field_validator
+from sqlalchemy import func
 from sqlalchemy.orm import Session
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import datetime, timedelta, timezone
+from typing import Generic, Optional, TypeVar
 
 from app.db.database import get_db
-from app.db.models import User, University, Document, ChatSession, Message
+from app.db.models import User, University, Document, ChatSession, Message, SystemLog
 from app.api.deps import get_current_admin
 from app.rag.embedder import _get_qdrant, COLLECTION_NAME
+from app.services.system_log_service import get_system_logs
 from qdrant_client.models import Filter, FieldCondition, MatchValue
 
 router = APIRouter(prefix="/admin", tags=["admin"])
+
+T = TypeVar("T")
+
+
+class Paginated(BaseModel, Generic[T]):
+    items: list[T]
+    total: int
+    limit: int
+    offset: int
 
 
 class UserAdminResponse(BaseModel):
@@ -54,12 +65,17 @@ def get_stats(
     }
 
 
-@router.get("/users", response_model=list[UserAdminResponse])
+@router.get("/users", response_model=Paginated[UserAdminResponse])
 def list_users(
     db: Session = Depends(get_db),
     _admin: User = Depends(get_current_admin),
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
 ):
-    return db.query(User).order_by(User.created_at.desc()).all()
+    q = db.query(User).order_by(User.created_at.desc())
+    total = q.count()
+    items = q.offset(offset).limit(limit).all()
+    return Paginated(items=items, total=total, limit=limit, offset=offset)
 
 
 @router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -85,16 +101,21 @@ def delete_user(
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.get("/documents", response_model=list[DocumentAdminResponse])
+@router.get("/documents", response_model=Paginated[DocumentAdminResponse])
 def list_documents(
     university_id: Optional[int] = None,
     db: Session = Depends(get_db),
     _admin: User = Depends(get_current_admin),
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
 ):
     q = db.query(Document)
     if university_id is not None:
         q = q.filter(Document.university_id == university_id)
-    return q.order_by(Document.created_at.desc()).all()
+    q = q.order_by(Document.created_at.desc())
+    total = q.count()
+    items = q.offset(offset).limit(limit).all()
+    return Paginated(items=items, total=total, limit=limit, offset=offset)
 
 
 @router.delete("/documents/{document_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -138,8 +159,6 @@ def promote_user(
     return user
 
 
-from pydantic import field_validator
-
 class SystemLogResponse(BaseModel):
     id: int
     level: str
@@ -158,13 +177,66 @@ class SystemLogResponse(BaseModel):
         from_attributes = True
 
 
-from app.services.system_log_service import get_system_logs
-
-
-@router.get("/logs", response_model=list[SystemLogResponse])
+@router.get("/logs", response_model=Paginated[SystemLogResponse])
 def list_system_logs(
     db: Session = Depends(get_db),
     _admin: User = Depends(get_current_admin),
+    limit: int = Query(15, ge=1, le=100),
+    offset: int = Query(0, ge=0),
 ):
-    return get_system_logs(db, limit=15)
+    q = db.query(SystemLog).order_by(SystemLog.created_at.desc())
+    total = q.count()
+    items = q.offset(offset).limit(limit).all()
+    return Paginated(items=items, total=total, limit=limit, offset=offset)
+
+
+class LoadHistoryPoint(BaseModel):
+    hour_utc: datetime
+    chat_count: int
+    event_count: int
+
+    @field_validator('hour_utc', mode='before')
+    @classmethod
+    def ensure_tz(cls, v):
+        if isinstance(v, datetime) and v.tzinfo is None:
+            return v.replace(tzinfo=timezone.utc)
+        return v
+
+    class Config:
+        from_attributes = True
+
+
+@router.get("/load-history", response_model=list[LoadHistoryPoint])
+def get_load_history(
+    db: Session = Depends(get_db),
+    _: User = Depends(get_current_admin),
+):
+    now = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0)
+    start = now - timedelta(hours=23)
+
+    chat_rows = db.query(
+        func.date_trunc('hour', Message.created_at).label('hour'),
+        func.count(Message.id).label('cnt'),
+    ).filter(
+        Message.role == 'user',
+        Message.created_at >= start,
+    ).group_by('hour').all()
+
+    event_rows = db.query(
+        func.date_trunc('hour', SystemLog.created_at).label('hour'),
+        func.count(SystemLog.id).label('cnt'),
+    ).filter(SystemLog.created_at >= start).group_by('hour').all()
+
+    chat_map = {r.hour.replace(tzinfo=timezone.utc): r.cnt for r in chat_rows}
+    event_map = {r.hour.replace(tzinfo=timezone.utc): r.cnt for r in event_rows}
+
+    points = []
+    for i in range(24):
+        h = start + timedelta(hours=i)
+        points.append(LoadHistoryPoint(
+            hour_utc=h,
+            chat_count=chat_map.get(h, 0),
+            event_count=event_map.get(h, 0),
+        ))
+    return points
 
