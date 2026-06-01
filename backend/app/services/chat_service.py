@@ -16,11 +16,15 @@ from app.rag.embedder import _get_openai
 
 logger = get_logger("chat_service")
 
-_FALLBACK_MESSAGE = (
-    "Bu soruya yanıt verecek ilgili bir belge bulunamadı. "
-    "Üniversitenin mevzuat sayfasında bu konuyla ilgili bir PDF tespit edilemedi. "
-    "Soruyu farklı bir şekilde sorabilir veya daha spesifik bir konu belirtebilirsiniz."
-)
+def _build_fallback_message(university: University | None) -> str:
+    base = (
+        "Bu soruya yanıt verecek ilgili bir belge bulunamadı. "
+        "Üniversitenin mevzuat sayfasında bu konuyla ilgili bir PDF tespit edilemedi. "
+        "Soruyu farklı bir şekilde sorabilir veya daha spesifik bir konu belirtebilirsiniz."
+    )
+    if university and university.mevzuat_url:
+        base += f"\n\nResmi mevzuat sayfasından manuel arama yapmak için: {university.mevzuat_url}"
+    return base
 
 
 class ChatService:
@@ -30,6 +34,7 @@ class ChatService:
         session: ChatSession,
         content: str,
         db: Session,
+        history: list[dict] | None = None,
     ) -> tuple[str, list[dict]]:
         """
         Soruyu RAG pipeline'ına iletir.
@@ -43,7 +48,8 @@ class ChatService:
         op = logger.start_operation("answer_question")
         op.add_field("session_id", session.id).add_field("university_id", session.university_id)
 
-        history = [{"role": m.role, "content": m.content} for m in session.messages]
+        if history is None:
+            history = [{"role": m.role, "content": m.content} for m in session.messages]
 
         answer, sources, needs_targeted_search = ask(
             question=content,
@@ -65,6 +71,7 @@ class ChatService:
         op.add_field("has_no_info", has_no_info)
         op.add_field("initial_sources", len(sources))
 
+        university: University | None = None
         if needs_targeted_search or has_no_info:
             university = db.query(University).filter(
                 University.id == session.university_id
@@ -87,8 +94,6 @@ class ChatService:
                     )
 
             if not answer or (any(kw in answer.lower() for kw in no_info_keywords) and not added):
-                # Fallback to existing documents in database with a lower threshold (0.35)
-                # in case they have lower similarity scores due to encoding or translation issues
                 fallback_answer, fallback_sources, _ = ask(
                     question=content,
                     university_id=session.university_id,
@@ -99,7 +104,7 @@ class ChatService:
                     answer = fallback_answer
                     sources = fallback_sources
                 else:
-                    answer = _FALLBACK_MESSAGE
+                    answer = _build_fallback_message(university)
                     sources = []
 
         op.add_field("answer_length", len(answer)).succeed()
@@ -134,6 +139,15 @@ class ChatService:
         user_msg = Message(session_id=session_id, role="user", content=question)
         assistant_msg = Message(session_id=session_id, role="assistant", content=answer, sources=sources)
         db.add(user_msg)
+        db.add(assistant_msg)
+        db.commit()
+        db.refresh(assistant_msg)
+        return assistant_msg
+
+    @staticmethod
+    def save_assistant_message(session_id: int, answer: str, db: Session, sources: list[dict] | None = None) -> Message:
+        """Sadece asistan mesajını DB'ye kaydeder. Regeneration için kullanılır."""
+        assistant_msg = Message(session_id=session_id, role="assistant", content=answer, sources=sources)
         db.add(assistant_msg)
         db.commit()
         db.refresh(assistant_msg)
