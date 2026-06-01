@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
+    "@mantine/charts": "^9.2.2",
     "@mantine/core": "^9.2.1",
     "@mantine/hooks": "^9.2.1",
     "@tabler/icons-react": "^3.44.0",
@@ -18,7 +19,8 @@
     "gsap": "^3.15.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
-    "react-router-dom": "^7.15.1"
+    "react-router-dom": "^7.15.1",
+    "recharts": "^3.8.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
