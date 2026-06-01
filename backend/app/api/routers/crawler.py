@@ -37,7 +37,7 @@ async def crawl_university(
     university.crawl_error = None
     db.commit()
 
-    background_tasks.add_task(run_crawl_job, university_id)
+    background_tasks.add_task(run_crawl_job, university_id, cleanup_obsolete=True)
     op = logger.start_operation("crawl_triggered")
     op.add_field("university_id", university_id).succeed()
 
