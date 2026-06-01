@@ -69,6 +69,12 @@ export default function ChatPage() {
     fetchSessions(storedToken);
   }, [navigate]);
 
+  const clearAuthAndRedirect = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/');
+  };
+
   // Fetch chat sessions
   const fetchSessions = async (authToken: string) => {
     try {
@@ -87,10 +93,9 @@ export default function ChatPage() {
           } else {
             selectSession(data[0].id, authToken);
           }
-        } else {
-          // If no session exists, create a new one automatically
-          createNewSession(authToken);
         }
+      } else if (res.status === 401) {
+        clearAuthAndRedirect();
       } else {
         setErrorMsg('Sohbet geçmişi yüklenirken bir sorun oluştu.');
       }
@@ -140,6 +145,8 @@ export default function ChatPage() {
         });
         setFeedbacks(initialFeedbacks);
         setFeedbackDbIds(initialFeedbackDbIds);
+      } else if (res.status === 401) {
+        clearAuthAndRedirect();
       } else {
         setErrorMsg('Sohbet içeriği yüklenemedi.');
       }
@@ -301,7 +308,8 @@ export default function ChatPage() {
       const res = await fetch(`${API_BASE_URL}/feedbacks/chat-feedback`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           message_id: msgId,
@@ -355,7 +363,7 @@ export default function ChatPage() {
       return;
     }
 
-    // Case 2: Creating a new dislike or switching from like -> POST (backend updates/upserts automatically)
+    // Case 2: Creating a new dislike -> save feedback then regenerate answer
     const comment = prompt("Bu yanıtı neden beğenmediğinizi kısaca açıklayabilirsiniz (İsteğe bağlı):");
 
     const msgIndex = messages.findIndex(m => m.id === msgId);
@@ -367,7 +375,8 @@ export default function ChatPage() {
       const res = await fetch(`${API_BASE_URL}/feedbacks/chat-feedback`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           message_id: msgId,
@@ -379,13 +388,40 @@ export default function ChatPage() {
       });
       if (res.ok) {
         const data = await res.json();
-        setFeedbackDbIds(prev => ({
-          ...prev,
-          [msgId]: data.id
-        }));
+        setFeedbackDbIds(prev => ({ ...prev, [msgId]: data.id }));
       }
     } catch (err) {
       console.error('Error sending thumb down feedback:', err);
+    }
+
+    // Regenerate the answer
+    if (!activeSessionId) return;
+    setIsTyping(true);
+    try {
+      const regenRes = await fetch(
+        `${API_BASE_URL}/chat/sessions/${activeSessionId}/messages/${msgId}/regenerate`,
+        { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      if (regenRes.ok) {
+        const regenData = await regenRes.json();
+        const newMsg: Message = {
+          id: regenData.id || Date.now() + 1,
+          role: 'assistant',
+          content: regenData.answer,
+          created_at: new Date().toISOString(),
+          sources: regenData.sources || []
+        };
+        setMessages(prev => prev.map(m => m.id === msgId ? newMsg : m));
+        // Yeni mesaj ID'si değiştiği için eski feedback state'lerini temizle
+        setFeedbacks(prev => { const c = { ...prev }; delete c[msgId]; return c; });
+        setFeedbackDbIds(prev => { const c = { ...prev }; delete c[msgId]; return c; });
+      } else {
+        setErrorMsg('Yanıt yeniden üretilirken bir sorun oluştu.');
+      }
+    } catch (err) {
+      setErrorMsg('Bağlantı hatası: Yanıt yeniden üretilemedi.');
+    } finally {
+      setIsTyping(false);
     }
   };
 

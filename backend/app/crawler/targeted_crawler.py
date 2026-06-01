@@ -19,7 +19,7 @@ logger = get_logger("targeted_crawler")
 
 
 async def _get_pdf_links(url: str) -> list[tuple[str, str]]:
-    """Mevzuat sayfasındaki tüm PDF linklerini ve başlıklarını döner."""
+    """Mevzuat sayfasındaki tüm PDF linklerini ve başlıklarını döner. Sekmeleri tıklayarak gizli içerikleri de tarar."""
     op = logger.start_operation("get_pdf_links")
     op.add_field("url", url)
 
@@ -29,18 +29,43 @@ async def _get_pdf_links(url: str) -> list[tuple[str, str]]:
         try:
             await page.goto(url, wait_until="domcontentloaded", timeout=30000)
             await page.wait_for_timeout(2000)
-            links = await page.evaluate("""
-                () => Array.from(document.querySelectorAll('a[href]'))
-                    .filter(a => a.href.toLowerCase().includes('.pdf'))
-                    .map(a => [a.href, a.textContent.trim().replace(/\\s+/g, ' ')])
-                    .filter(([href]) => href.startsWith('http'))
-            """)
+
             seen: set[str] = set()
             result: list[tuple[str, str]] = []
-            for href, title in links:
-                if href not in seen:
-                    seen.add(href)
-                    result.append((href, title))
+
+            async def collect():
+                links = await page.evaluate("""
+                    () => Array.from(document.querySelectorAll('a[href]'))
+                        .filter(a => a.href.toLowerCase().includes('.pdf'))
+                        .map(a => [a.href, a.textContent.trim().replace(/\\s+/g, ' ')])
+                        .filter(([href]) => href.startsWith('http'))
+                """)
+                for href, title in links:
+                    if href not in seen:
+                        seen.add(href)
+                        result.append((href, title))
+
+            await collect()
+
+            # Sekme navigation varsa her sekmeye tıkla
+            tab_selectors = (
+                '[role="tab"], [data-toggle="tab"], [data-bs-toggle="tab"], '
+                '.nav-tabs a, .nav-tabs button, .tab-nav a, .tab-nav button, '
+                '.tabs-nav button, .tabs-nav a'
+            )
+            tabs = await page.query_selector_all(tab_selectors)
+            for tab in tabs:
+                try:
+                    await tab.click()
+                    await page.wait_for_timeout(800)
+                    if page.url == url:
+                        await collect()
+                    else:
+                        await page.goto(url, wait_until="domcontentloaded", timeout=15000)
+                        await page.wait_for_timeout(1000)
+                except Exception:
+                    continue
+
             op.add_field("pdf_count", len(result)).succeed()
             return result
         except Exception:

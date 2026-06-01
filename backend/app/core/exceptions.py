@@ -27,6 +27,7 @@ class ErrorCodes:
     CHAT_ERROR                = "UNILEX_006"
     VALIDATION_ERROR          = "UNILEX_007"
     UNIVERSITY_DETECT_FAILED  = "UNILEX_008"
+    MESSAGE_NOT_FOUND         = "UNILEX_009"
 
 
 class ErrorMessages:
@@ -38,6 +39,7 @@ class ErrorMessages:
     CHAT_ERROR                = "Sohbet isteği işlenemedi."
     VALIDATION_ERROR          = "İstek doğrulaması başarısız."
     UNIVERSITY_DETECT_FAILED  = "Hangi üniversite hakkında bilgi almak istediğinizi anlayamadım."
+    MESSAGE_NOT_FOUND         = "Mesaj bulunamadı veya bu mesaja erişim yetkiniz yok."
 
 
 # ---------------------------------------------------------------------------
@@ -118,6 +120,15 @@ class ChatError(UnilexException):
             code=ErrorCodes.CHAT_ERROR,
             message=f"{ErrorMessages.CHAT_ERROR} {detail}".strip(),
             status_code=500,
+        )
+
+
+class MessageNotFoundError(UnilexException):
+    def __init__(self) -> None:
+        super().__init__(
+            code=ErrorCodes.MESSAGE_NOT_FOUND,
+            message=ErrorMessages.MESSAGE_NOT_FOUND,
+            status_code=404,
         )
 
 
