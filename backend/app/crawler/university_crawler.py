@@ -7,21 +7,10 @@ from sqlalchemy.orm import Session
 from app.db.models import University, Document
 
 
-MEVZUAT_KEYWORDS = [
-    "yönetmelik", "yönerge", "statü", "esaslar", "tüzük",
-    "mevzuat", "kural", "ilke", "karar", "kanun", "uygulama",
-    "yönetim", "akademik", "disiplin", "sınav", "öğrenci",
-]
-
-
 class UniversityCrawler:
 
-    def _is_relevant_pdf(self, title: str, url: str) -> bool:
-        text = (title + " " + url).lower()
-        return any(kw in text for kw in MEVZUAT_KEYWORDS)
-
     async def crawl(self, university: University, db: Session) -> dict:
-        result = {"documents_added": 0, "pdfs_found": 0, "errors": []}
+        result = {"documents_added": 0, "pdfs_found": 0, "errors": [], "discovered_source_urls": []}
 
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True)
@@ -36,11 +25,8 @@ class UniversityCrawler:
                 await page.wait_for_timeout(2000)
 
                 pdf_links = await self._extract_pdf_links(page)
-                pdf_links = [
-                    (url, title) for url, title in pdf_links
-                    if self._is_relevant_pdf(title, url)
-                ]
                 result["pdfs_found"] = len(pdf_links)
+                discovered: set[str] = set()
 
                 if not pdf_links:
                     page_text = await self._extract_page_text(page)
@@ -53,6 +39,11 @@ class UniversityCrawler:
                             source_url=university.mevzuat_url,
                         )
                         result["documents_added"] += 1
+                        discovered.add(university.mevzuat_url)
+                else:
+                    # Track all found PDF links as discovered (even if download fails)
+                    for pdf_url, _ in pdf_links:
+                        discovered.add(pdf_url)
 
                 async with httpx.AsyncClient(timeout=30.0, follow_redirects=True, verify=False) as client:
                     for pdf_url, pdf_title in pdf_links:
@@ -70,6 +61,8 @@ class UniversityCrawler:
                         except Exception as e:
                             result["errors"].append(f"{pdf_url}: {str(e)}")
 
+                result["discovered_source_urls"] = list(discovered)
+
                 university.is_crawled = True
                 university.crawled_at = datetime.now(timezone.utc)
                 db.commit()
@@ -82,21 +75,45 @@ class UniversityCrawler:
         return result
 
     async def _extract_pdf_links(self, page: Page) -> list[tuple[str, str]]:
-        links = await page.evaluate("""
-            () => {
-                return Array.from(document.querySelectorAll('a[href]'))
+        seen: set[str] = set()
+        result: list[tuple[str, str]] = []
+        base_url = page.url
+
+        async def collect():
+            links = await page.evaluate("""
+                () => Array.from(document.querySelectorAll('a[href]'))
                     .filter(a => a.href.toLowerCase().includes('.pdf'))
                     .map(a => [a.href, a.textContent.trim().replace(/\\s+/g, ' ')])
-                    .filter(([href]) => href.startsWith('http'));
-            }
-        """)
-        seen = set()
-        unique = []
-        for url, title in links:
-            if url not in seen:
-                seen.add(url)
-                unique.append((url, title))
-        return unique
+                    .filter(([href]) => href.startsWith('http'))
+            """)
+            for url, title in links:
+                if url not in seen:
+                    seen.add(url)
+                    result.append((url, title))
+
+        await collect()
+
+        # Sekme (tab) navigation varsa her sekmeye tıkla ve linkleri topla
+        tab_selectors = (
+            '[role="tab"], [data-toggle="tab"], [data-bs-toggle="tab"], '
+            '.nav-tabs a, .nav-tabs button, .tab-nav a, .tab-nav button, '
+            '.tabs-nav button, .tabs-nav a'
+        )
+        tabs = await page.query_selector_all(tab_selectors)
+
+        for tab in tabs:
+            try:
+                await tab.click()
+                await page.wait_for_timeout(800)
+                if page.url != base_url:
+                    await page.goto(base_url, wait_until="domcontentloaded", timeout=15000)
+                    await page.wait_for_timeout(1000)
+                else:
+                    await collect()
+            except Exception:
+                continue
+
+        return result
 
     async def _extract_page_text(self, page: Page) -> str:
         return await page.evaluate("""
