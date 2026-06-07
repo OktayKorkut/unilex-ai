@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
-import { Modal, TextInput, PasswordInput, Button, Group, Text, Box, Flex, Divider, Anchor, Title, Alert, Loader } from '@mantine/core';
-import { IconRobot, IconBrandGoogle, IconBrandGithub, IconAlertCircle } from '@tabler/icons-react';
+import { Modal, TextInput, PasswordInput, Button, Text, Box, Flex, Anchor, Title, Alert, Loader } from '@mantine/core';
+import { IconRobot, IconAlertCircle } from '@tabler/icons-react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import classes from './AuthModal.module.css';
@@ -334,16 +334,7 @@ export default function AuthModal({ opened, onClose }: AuthModalProps) {
               {loading ? <Loader size="xs" color="white" /> : (type === 'login' ? 'Giriş Yap' : 'Hesap Oluştur')}
             </Button>
 
-            <Divider label="Veya" labelPosition="center" my="xl" />
 
-            <Group grow mb="md">
-              <Button variant="default" radius="xl" leftSection={<IconBrandGoogle size={18} />}>
-                Google
-              </Button>
-              <Button variant="default" radius="xl" leftSection={<IconBrandGithub size={18} />}>
-                GitHub
-              </Button>
-            </Group>
 
             <Text ta="center" size="sm" c="dimmed" mt="xl">
               {type === 'login' ? 'Hesabınız yok mu?' : 'Zaten bir hesabınız var mı?'}

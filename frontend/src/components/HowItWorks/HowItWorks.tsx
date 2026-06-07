@@ -15,7 +15,7 @@ import classes from "./HowItWorks.module.css";
 
 export default function HowItWorks() {
   return (
-    <Box className={classes.wrapper}>
+    <Box id="how-it-works" className={classes.wrapper}>
       <Container size="xl">
         <Grid align="center">
           <Grid.Col span={{ base: 12, md: 6 }}>
