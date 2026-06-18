@@ -12,6 +12,7 @@ from app.core.exceptions import MessageNotFoundError, SessionNotFoundError, Univ
 from app.core.logger import get_logger
 from app.services.university_service import UniversityService
 from app.services.chat_service import ChatService
+from app.agent.chat_agent import is_smalltalk, SMALLTALK_SYSTEM
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 logger = get_logger("chat_router")
@@ -174,8 +175,41 @@ async def send_message(
     if current_user.anonymized:
         content_to_process = mask_pii(content_to_process)
 
-    # Üniversite henüz belirlenmemişse mesajdan tespit et ve hazırla
+    # Üniversite henüz belirlenmemişse: smalltalk ise direkt yanıtla, değilse tespit et
     if session.university_id is None:
+        if is_smalltalk(content_to_process):
+            from app.rag.embedder import _get_openai
+            from app.core.config import settings as app_settings
+
+            history = [{"role": m.role, "content": m.content} for m in session.messages]
+            messages = [{"role": "system", "content": SMALLTALK_SYSTEM}]
+            messages += history[-4:]
+            messages.append({"role": "user", "content": content_to_process})
+            response = _get_openai().chat.completions.create(
+                model=app_settings.LLM_MODEL,
+                messages=messages,
+                temperature=0.7,
+                max_tokens=150,
+            )
+            answer = response.choices[0].message.content
+
+            assistant_msg_id = None
+            if current_user.history_saved:
+                if session.title is None:
+                    session.title = ChatService.generate_title(content_to_process)
+                    db.commit()
+                saved_msg = ChatService.save_messages(session_id, content_to_process, answer, db)
+                assistant_msg_id = saved_msg.id
+
+            op.add_field("result", "smalltalk_no_university").succeed()
+            return {
+                "id": assistant_msg_id,
+                "question": content_to_process,
+                "answer": answer,
+                "university_id": None,
+                "sources": [],
+            }
+
         university, error_msg = await UniversityService.resolve_for_session(
             session, content_to_process, db
         )
