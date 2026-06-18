@@ -32,7 +32,7 @@ def seed_universities():
                     name=uni_data["name"],
                     slug=uni_data["slug"],
                     mevzuat_url=uni_data["mevzuat_url"]
-                    # is_crawled default olarak False gelecek (models'te öyle tanımlamıştınız)
+                    # is_crawled default olarak False gelecek (models'te öyle tanımlamladık)
                 )
                 db.add(new_uni)
                 added_count += 1

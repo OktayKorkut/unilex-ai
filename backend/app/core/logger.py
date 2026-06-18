@@ -1,8 +1,5 @@
 """
 Unilex AI — structured JSON logging.
-
-dqa-backend'deki DocQALogger / OperationLog pattern'ından esinlenilmiştir.
-Harici bağımlılık gerektirmez; Python stdlib logging kullanır.
 """
 
 import json
@@ -92,10 +89,7 @@ class OperationLog:
 
 
 class UnilexLogger:
-    """
-    dqa-backend DocQALogger API'siyle uyumlu ince sarmalayıcı.
-    Her modül kendi named logger'ını alır.
-    """
+    """Her modül kendi named logger'ını alır."""
 
     def __init__(self, name: str) -> None:
         self._logger = _get_stdlib_logger(name)

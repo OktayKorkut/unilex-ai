@@ -1,7 +1,5 @@
 """
 Unilex AI — merkezi exception sistemi.
-
-dqa-backend'deki CustomException / add_exception_handler pattern'ından esinlenilmiştir.
 """
 
 from fastapi import FastAPI

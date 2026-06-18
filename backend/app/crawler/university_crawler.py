@@ -5,6 +5,10 @@ from playwright.async_api import async_playwright, Page
 from pypdf import PdfReader
 from sqlalchemy.orm import Session
 from app.db.models import University, Document
+from app.core.logger import get_logger
+from app.services.system_log_service import create_system_log
+
+logger = get_logger("crawler")
 
 
 class UniversityCrawler:
@@ -49,7 +53,15 @@ class UniversityCrawler:
                     for pdf_url, pdf_title in pdf_links:
                         try:
                             text = await self._extract_pdf_text(client, pdf_url)
-                            if text and len(text.strip()) > 100:
+                            if not text:
+                                reason = "PDF'den metin çıkarılamadı (bozuk encoding veya görsel PDF)"
+                                result["errors"].append(f"{pdf_url}: {reason}")
+                                create_system_log(db, "warning", "PDF Atlandı", f"[{university.name}] {pdf_title or 'Başlıksız'}: {reason}\n{pdf_url}")
+                            elif len(text.strip()) <= 100:
+                                reason = f"Metin çok kısa ({len(text.strip())} karakter)"
+                                result["errors"].append(f"{pdf_url}: {reason}")
+                                create_system_log(db, "warning", "PDF Atlandı", f"[{university.name}] {pdf_title or 'Başlıksız'}: {reason}\n{pdf_url}")
+                            else:
                                 self._save_document(
                                     db=db,
                                     university_id=university.id,
@@ -60,6 +72,7 @@ class UniversityCrawler:
                                 result["documents_added"] += 1
                         except Exception as e:
                             result["errors"].append(f"{pdf_url}: {str(e)}")
+                            create_system_log(db, "error", "PDF İndirme Hatası", f"[{university.name}] {pdf_title or 'Başlıksız'}: {str(e)[:250]}\n{pdf_url}")
 
                 result["discovered_source_urls"] = list(discovered)
 
