@@ -37,7 +37,7 @@ _MEVZUAT_KEYWORDS = frozenset({
 })
 
 
-def _is_smalltalk(question: str) -> bool:
+def is_smalltalk(question: str) -> bool:
     q = question.lower().strip()
     words = set(q.split())
     has_smalltalk = bool(words & _SMALLTALK_KEYWORDS)
@@ -69,7 +69,7 @@ def ask(
     op = logger.start_operation("ask")
     op.add_field("university_id", university_id).add_field("question_len", len(question))
 
-    if _is_smalltalk(question):
+    if is_smalltalk(question):
         op.add_field("result", "smalltalk").succeed()
         messages = [{"role": "system", "content": SMALLTALK_SYSTEM}]
         messages += history[-4:]
