@@ -86,13 +86,9 @@ export default function ChatPage() {
       if (res.ok) {
         const data = await res.json();
         setSessions(data);
-        if (data.length > 0) {
-          const urlSessionId = searchParams.get('session_id');
-          if (urlSessionId && data.some((s: any) => s.id === Number(urlSessionId))) {
-            selectSession(Number(urlSessionId), authToken);
-          } else {
-            selectSession(data[0].id, authToken);
-          }
+        const urlSessionId = searchParams.get('session_id');
+        if (urlSessionId && data.some((s: any) => s.id === Number(urlSessionId))) {
+          selectSession(Number(urlSessionId), authToken);
         }
       } else if (res.status === 401) {
         clearAuthAndRedirect();
@@ -203,11 +199,56 @@ export default function ChatPage() {
   // Send message
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!inputValue.trim() || !activeSessionId || !token) return;
+    if (!inputValue.trim() || !token) return;
 
     const userQuestion = inputValue.trim();
     setInputValue('');
     setErrorMsg('');
+
+    let sessionId = activeSessionId;
+
+    // Session yoksa otomatik oluştur
+    if (!sessionId) {
+      let universityId = null;
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        try {
+          const parsed = JSON.parse(storedUser);
+          universityId = parsed.university_id || null;
+        } catch (e) {
+          console.error('Error parsing user storage:', e);
+        }
+      }
+
+      try {
+        const sessionRes = await fetch(`${API_BASE_URL}/chat/sessions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ university_id: universityId })
+        });
+        if (sessionRes.ok) {
+          const sessionData = await sessionRes.json();
+          sessionId = sessionData.session_id;
+          const newSession: ChatSession = {
+            id: sessionData.session_id,
+            university_id: sessionData.university_id,
+            created_at: sessionData.created_at
+          };
+          setSessions(prev => [newSession, ...prev]);
+          setActiveSessionId(sessionId);
+          setSearchParams({ session_id: String(sessionId) }, { replace: true });
+        } else {
+          setErrorMsg('Sohbet oluşturulamadı.');
+          return;
+        }
+      } catch (err) {
+        setErrorMsg('Bağlantı hatası: Sohbet oluşturulamadı.');
+        return;
+      }
+    }
 
     // 1. Add user message locally
     const userMsgId = Date.now();
@@ -222,7 +263,7 @@ export default function ChatPage() {
 
     try {
       // 2. POST to send message
-      const res = await fetch(`${API_BASE_URL}/chat/sessions/${activeSessionId}/messages`, {
+      const res = await fetch(`${API_BASE_URL}/chat/sessions/${sessionId}/messages`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
