@@ -106,7 +106,7 @@ def embed_document(document: Document) -> None:
                     },
                 ))
 
-        qdrant.upsert(collection_name=COLLECTION_NAME, points=points)
+        qdrant.upsert(collection_name=COLLECTION_NAME, points=points) #varsa güncelle, yoksa ekle
         op.add_field("points_upserted", len(points)).succeed()
 
     except Exception as e:

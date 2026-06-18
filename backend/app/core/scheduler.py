@@ -16,7 +16,7 @@ async def _crawl_all_universities() -> None:
     try:
         universities = (
             db.query(University)
-            .filter(University.is_crawled == True, University.crawl_status != "running")  # noqa: E712
+            .filter(University.is_crawled == True, University.crawl_status != "running") 
             .all()
         )
         ids = [u.id for u in universities]
