@@ -28,6 +28,7 @@ UniLex AI bu süreci otomatikleştirir: resmi belgeler sisteme otomatik olarak t
 - **Admin paneli** — Crawler yönetimi, sistem logları, kullanıcı ve geri bildirim takibi
 - **Kimlik doğrulama** — JWT tabanlı oturum, Bcrypt şifreleme, e-posta ile şifre sıfırlama
 - **KVKK uyumu** — Kullanıcı verisi anonimleştirme ve hesap silme
+- **Türkçe encoding düzeltmesi** — PDF'lerden çıkan bozuk Türkçe karakterler (İ, Ö, Ü, Ç, Ğ, Ş) otomatik olarak düzeltilir
 - **Periyodik güncelleme** — APScheduler ile her 24 saatte bir otomatik yeniden tarama
 
 ---
@@ -42,6 +43,7 @@ UniLex AI bu süreci otomatikleştirir: resmi belgeler sisteme otomatik olarak t
 | Embedding | OpenAI text-embedding-3-small (1536 boyut) |
 | Vektör Veritabanı | Qdrant |
 | İlişkisel Veritabanı | PostgreSQL 16 + SQLAlchemy 2.0 + Alembic |
+| PDF Metin Çıkarma | PyMuPDF (fitz) |
 | Web Crawler | Playwright |
 | Altyapı | Docker Compose + Nginx |
 
