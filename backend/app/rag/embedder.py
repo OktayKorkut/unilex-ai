@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.logger import get_logger
+from app.core.text_utils import fix_turkish_encoding
 from app.db.models import Document
 
 logger = get_logger("embedder")
@@ -74,7 +75,8 @@ def embed_document(document: Document) -> None:
             ),
         )
 
-        chunks = _chunk_text(document.content)
+        clean_content = fix_turkish_encoding(document.content)
+        chunks = _chunk_text(clean_content)
         op.add_field("chunk_count", len(chunks))
 
         if not chunks:

@@ -19,7 +19,7 @@ tiktoken==0.8.0
 
 # Crawler
 playwright==1.49.0
-pypdf==5.1.0
+pymupdf==1.25.5
 
 # Scheduler
 apscheduler==3.10.4

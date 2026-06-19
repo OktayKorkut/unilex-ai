@@ -1,11 +1,11 @@
-import io
 import httpx
+import fitz
 from datetime import datetime, timezone
 from playwright.async_api import async_playwright, Page
-from pypdf import PdfReader
 from sqlalchemy.orm import Session
 from app.db.models import University, Document
 from app.core.logger import get_logger
+from app.core.text_utils import fix_turkish_encoding
 from app.services.system_log_service import create_system_log
 
 logger = get_logger("crawler")
@@ -143,17 +143,17 @@ class UniversityCrawler:
     async def _extract_pdf_text(self, client: httpx.AsyncClient, url: str) -> str:
         response = await client.get(url)
         response.raise_for_status()
-        reader = PdfReader(io.BytesIO(response.content))
+        doc = fitz.open(stream=response.content, filetype="pdf")
         pages_text = []
-        for pdf_page in reader.pages:
-            text = pdf_page.extract_text()
+        for page in doc:
+            text = page.get_text()
             if text:
                 pages_text.append(text.strip())
+        doc.close()
         raw = "\n\n".join(pages_text).replace("\x00", "")
-        # PDFs with unresolved Unicode escape sequences (/uniXXXX) are garbled — unusable for RAG
         if raw and raw.count("/uni") > len(raw) / 20:
             return ""
-        return raw
+        return fix_turkish_encoding(raw)
 
     def _save_document(self, db, university_id, title, content, source_url):
         try:
