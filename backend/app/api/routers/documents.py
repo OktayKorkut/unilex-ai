@@ -3,10 +3,11 @@ from datetime import datetime
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from pydantic import BaseModel
-from pypdf import PdfReader
+import fitz
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_admin
+from app.core.text_utils import fix_turkish_encoding
 from app.db.database import get_db
 from app.db.models import Document, University, User
 from app.rag.embedder import embed_document
@@ -87,12 +88,14 @@ async def upload_university_pdf(
 
     try:
         pdf_content = await file.read()
-        reader = PdfReader(io.BytesIO(pdf_content))
+        doc = fitz.open(stream=pdf_content, filetype="pdf")
         text = ""
-        for page in reader.pages:
-            extracted = page.extract_text()
+        for page in doc:
+            extracted = page.get_text()
             if extracted:
                 text += extracted + "\n"
+        doc.close()
+        text = fix_turkish_encoding(text)
 
         if not text.strip():
             raise HTTPException(

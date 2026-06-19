@@ -2,17 +2,17 @@
 Kullanıcı sorusuna göre mevzuat sayfasından ilgili PDF'leri bulup indirir.
 """
 
-import io
 import json
 
+import fitz
 import httpx
 from playwright.async_api import async_playwright
-from pypdf import PdfReader
 from openai import OpenAI
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.logger import get_logger
+from app.core.text_utils import fix_turkish_encoding
 from app.db.models import Document, University
 
 logger = get_logger("targeted_crawler")
@@ -123,9 +123,10 @@ async def _download_pdf_text(url: str) -> str:
     async with httpx.AsyncClient(timeout=30.0, follow_redirects=True, verify=False) as client:
         response = await client.get(url)
         response.raise_for_status()
-        reader = PdfReader(io.BytesIO(response.content))
-        pages_text = [p.extract_text() for p in reader.pages if p.extract_text()]
-        return "\n\n".join(t.strip() for t in pages_text)
+        doc = fitz.open(stream=response.content, filetype="pdf")
+        pages_text = [p.get_text().strip() for p in doc if p.get_text()]
+        doc.close()
+        return fix_turkish_encoding("\n\n".join(pages_text))
 
 
 async def search_and_embed_for_question(
