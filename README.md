@@ -38,14 +38,14 @@ UniLex AI bu süreci otomatikleştirir: resmi belgeler sisteme otomatik olarak t
 | Katman | Teknoloji |
 |--------|-----------|
 | Backend | FastAPI + Python 3.11 |
-| Frontend | React 19 + Vite + Mantine UI v9 + GSAP |
+| Frontend | Yeniden geliştiriliyor |
 | LLM | OpenAI gpt-4o-mini |
 | Embedding | OpenAI text-embedding-3-small (1536 boyut) |
 | Vektör Veritabanı | Qdrant |
 | İlişkisel Veritabanı | PostgreSQL 16 + SQLAlchemy 2.0 + Alembic |
 | PDF Metin Çıkarma | PyMuPDF (fitz) |
 | Web Crawler | Playwright |
-| Altyapı | Docker Compose + Nginx |
+| Altyapı | Docker Compose |
 
 ---
 
@@ -87,7 +87,6 @@ docker compose up --build
 
 | Servis | Adres |
 |--------|-------|
-| Uygulama | http://localhost:3000 |
 | API (Swagger) | http://localhost:8000/docs |
 
 ---
@@ -102,8 +101,8 @@ docker compose up --build
 | 4 | Agentic chat — üniversite tespiti, URL keşfi, hedefli crawl |
 | 5 | Kod kalitesi — loglama, exception handling, servis katmanı |
 | 6 | Alembic migration sistemi, admin paneli, KVKK, periyodik crawl |
-| 7 | React frontend — chat, profil, admin dashboard |
-| 8 | Şifre sıfırlama, obsolete belge temizliği, sayfalama, Nginx container |
+| 7 | İlk React frontend sürümü (kaldırıldı, yeniden geliştirilecek) |
+| 8 | Şifre sıfırlama, obsolete belge temizliği, sayfalama |
 
 ---
 
@@ -111,4 +110,4 @@ docker compose up --build
 
 Bu proje Işık Üniversitesi COMP/SOFT 4902 Mezuniyet Tasarım Projesi kapsamında geliştirilmiştir.
 
-**Oktay Korkut** (21COMP1046) · **Betül Taşkıran** (21SOFT1047)  
+**Oktay Korkut** (21COMP1046)
