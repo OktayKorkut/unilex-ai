@@ -27,6 +27,7 @@ UniLex AI resmi belgeleri otomatik toplar, anlamsal olarak indeksler ve öğrenc
 |---|---|
 | **36** | REST endpoint |
 | **7** | Veritabanı tablosu, **6** Alembic migration |
+| **81** | Otomatik test (pytest) |
 | **~3.9K** | Satır Python (backend) |
 | **3** | Docker servisi (PostgreSQL, Qdrant, API) |
 
@@ -150,11 +151,36 @@ docker compose up --build
 
 ---
 
+## Testler
+
+```bash
+cd backend
+pip install -r requirements-dev.txt
+pytest
+```
+
+Testler PostgreSQL, Qdrant ya da OpenAI'a **bağlanmaz**: veritabanı için geçici SQLite, dış servisler için sahte istemciler kullanılır. API anahtarı gerekmez, internetsiz çalışır.
+
+| Alan | Neyi doğrular |
+|------|---------------|
+| Chunking | Boyut, örtüşme, tüm kelimelerin kapsanması, karakter üst sınırı |
+| Türkçe kodlama | Bozuk PDF aksanlarının onarımı, idempotentlik |
+| Güvenlik | bcrypt, JWT imza/süre/sahtecilik, şifre sıfırlama token'ının tek amaçlı olması |
+| Sohbet ajanı | 0.60 alaka eşiği (sınır dahil), eşik altında LLM'e gitmeme, üniversite filtresi, geçmiş kırpma |
+| Belge temizliği | %80 güvenlik eşiği (alt, tam ve üst sınır), diğer üniversiteye dokunmama, Qdrant hatasına dayanıklılık |
+| API | Kayıt/giriş, kullanıcı varlığının sızmaması, yetkisiz erişim, şifre sıfırlama, hesap silme |
+
+Testlerin gerçekten hata yakaladığı, kasıtlı olarak koda hata sokularak (mutasyon) doğrulanmıştır.
+Henüz kapsanmayanlar: Playwright crawler'ı, Qdrant ile gerçek embedding ve sohbet endpoint'leri.
+
+---
+
 ## Proje yapısı
 
 ```
 backend/
 ├── alembic/            # Veritabanı migration'ları
+├── tests/              # pytest testleri
 └── app/
     ├── agent/          # Sohbet ajanı, üniversite tespiti ve keşfi
     ├── api/routers/    # REST uç noktaları (auth, chat, admin, ...)
@@ -170,7 +196,7 @@ backend/
 ## Yol haritası
 
 - [ ] Yeni web arayüzü (sıfırdan yeniden geliştiriliyor)
-- [ ] Otomatik testler (birim ve entegrasyon)
+- [ ] Crawler, embedding ve sohbet endpoint'leri için testler
 - [ ] Birden fazla üniversite için veri seti (mimari hazır, şu an Işık Üniversitesi tanımlı)
 
 ---

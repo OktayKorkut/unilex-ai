@@ -23,6 +23,7 @@ Thumbs.db
 # Logs
 *.log
 *.txt
+!requirements*.txt
 logs/
 
 # Playwright
